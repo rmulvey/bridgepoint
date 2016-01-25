@@ -796,7 +796,7 @@ INSERT INTO O_ATTR
 	"0849862c-76a0-4d0f-bb84-cf5aef617874",
 	"45f1b8ac-2115-4a50-9b6a-eacd460b724e",
 	'reprocess',
-	'',
+	'If a connector was created during reconciliation then we use this attribtue to force the reconciliation process to run again and complete connector reconciliation.',
 	'',
 	'reprocess',
 	0,
