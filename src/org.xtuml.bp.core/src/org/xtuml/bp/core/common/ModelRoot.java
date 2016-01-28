@@ -180,36 +180,36 @@ public abstract class ModelRoot extends ModelElement implements IModelChangeProv
      * 
      */
     public static void disableChangeNotification() {
-		synchronized (threadsDisablingNotification) {
-			Thread current = Thread.currentThread();
-			if (threadsDisablingNotification.containsKey(current)) {
-				int count = threadsDisablingNotification.get(current);
-				threadsDisablingNotification.put(current, ++count);
-			}
-			else {
-				threadsDisablingNotification.put(current, 1);
-			}
-        }
+//		synchronized (threadsDisablingNotification) {
+//			Thread current = Thread.currentThread();
+//			if (threadsDisablingNotification.containsKey(current)) {
+//				int count = threadsDisablingNotification.get(current);
+//				threadsDisablingNotification.put(current, ++count);
+//			}
+//			else {
+//				threadsDisablingNotification.put(current, 1);
+//			}
+//        }
     }
     
     public static void enableChangeNotification() {
-		synchronized (threadsDisablingNotification) {
-			Thread current = Thread.currentThread();
-			if (threadsDisablingNotification.containsKey(current)) {
-				int count = threadsDisablingNotification.get(current);
-				if (--count > 0) {
-					threadsDisablingNotification.put(current, count);
-				}
-				else {
-					threadsDisablingNotification.remove(current);
-				}
-			}
-			else {
-			  Throwable err = new Throwable();
-			  err.fillInStackTrace();
-			  CorePlugin.logError("Thread attempted to enable change notification without prior disable", err);	
-			}
-        }
+//		synchronized (threadsDisablingNotification) {
+//			Thread current = Thread.currentThread();
+//			if (threadsDisablingNotification.containsKey(current)) {
+//				int count = threadsDisablingNotification.get(current);
+//				if (--count > 0) {
+//					threadsDisablingNotification.put(current, count);
+//				}
+//				else {
+//					threadsDisablingNotification.remove(current);
+//				}
+//			}
+//			else {
+//			  Throwable err = new Throwable();
+//			  err.fillInStackTrace();
+//			  CorePlugin.logError("Thread attempted to enable change notification without prior disable", err);	
+//			}
+//        }
     }
     
     public void addModelChangeListener(IModelChangeListener newListener) {

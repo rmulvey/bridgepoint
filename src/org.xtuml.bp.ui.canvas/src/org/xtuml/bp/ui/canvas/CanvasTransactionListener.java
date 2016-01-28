@@ -51,7 +51,6 @@ public class CanvasTransactionListener implements ITransactionListener {
 
 	public void transactionStarted(Transaction transaction) {
 		// do nothing
-		
 	
 	}
 
@@ -60,9 +59,10 @@ public class CanvasTransactionListener implements ITransactionListener {
 		
 	}
 
-	public void transactionEnded(final Transaction transaction) {
+	public void transactionEnded(final Transaction transaction) {	
+		// If we are already in a reconcile transaction we don't want to start another one
 		if (!transaction.getType().equals(Transaction.AUTORECONCILE_TYPE)) {
-			if (containsCreateOrDeleteDelta(transaction)) {
+			if (containsCreateDelta(transaction)) {
 				CanvasTransactionListener.startReconciler(transaction,
 						false, true);
 			}
@@ -73,46 +73,6 @@ public class CanvasTransactionListener implements ITransactionListener {
 			IModelDelta[] modelDeltas = transaction.getDeltas(modelRoots[i]);
 			for (int j = 0; j < modelDeltas.length; j++) {
 				IModelDelta delta = modelDeltas[j];
-
-//				if (delta.getKind() == Modeleventnotification_c.DELTA_NEW) {
-//
-//					if (delta.getModelElement() instanceof ModelClass_c) {
-//
-//						BaseModelDelta bmd = (BaseModelDelta) delta;
-//						ModelClass_c modelClass = (ModelClass_c) (delta
-//								.getModelElement());
-//						Subsystem_c subsystem = Subsystem_c
-//								.getOneS_SSOnR2(modelClass);
-//						Ooaofgraphics graphicsRoot = Ooaofgraphics
-//								.getInstance(subsystem.getModelRoot().getId());
-//						ModelRoot modelRoot = modelClass.getModelRoot();
-//						Model_c[] mdls = Model_c.ModelInstances(graphicsRoot);
-//						for (int k = 0; k < mdls.length; k++) {
-//							
-//							if (mdls[k].getRepresents() == subsystem) {
-//								ModelTool_c modelTool = ModelTool_c
-//								.getOneCT_MTLOnR100(mdls[k]);
-//								
-//								if (modelClass != null) {
-//									int state = mdls[k].get_current_state();
-//									if (state != mdls[k].ST_MODEL_DELEGATING_MOUSE_RELEASE) {
-//									   int type=mdls[k].getModel_type();
-//									   mdls[k].Newmodelclass();
-//									   
-//									  // ShapeTool_c shapeTool =ShapeTool_c.getOneCT_STLOnR102(modelTool);
-//									   //mdls[k].MousePressed(false, true, 200, 200);
-//									   
-//									   //Activepoller_c.Oneshot();
-////									   mdls[k].MouseReleased(false,200, 200);
-//       								   //Activepoller_c.Oneshot();
-//       								   //CanvasEditor.redrawAll();
-//									}
-//									  
-//								}
-//							}
-//
-//						}}
-//					}
 
 
 				if (delta.getKind() == Modeleventnotification_c.DELTA_ELEMENT_RELATED) {
@@ -137,7 +97,7 @@ public class CanvasTransactionListener implements ITransactionListener {
 	}
 
 	public static void disableReconciler() {
-		reconcilerDisabled = true;
+		reconcilerDisabled = false;
 	}
 
 	public static void enableReconciler() {
@@ -181,7 +141,7 @@ public class CanvasTransactionListener implements ITransactionListener {
 		}
 	}
 
-	public static void runReconciler(Transaction transaction, boolean removeElements) {
+	private static void runReconciler(Transaction transaction, boolean removeElements) {
 		TransactionManager manager = TransactionManager.getSingleton();
 		if (transaction != null) {
 			if (transaction.getTransactionManager().getActiveTransaction() != null)
@@ -265,6 +225,21 @@ public class CanvasTransactionListener implements ITransactionListener {
 						|| deltas[i].getKind() == Modeleventnotification_c.DELTA_DELETE
 						|| deltas[i].getKind() == Modeleventnotification_c.DELTA_ELEMENT_RELATED
 						|| deltas[i].getKind() == Modeleventnotification_c.DELTA_ELEMENT_UNRELATED) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+	
+	private boolean containsCreateDelta(Transaction transaction) {
+		IModelDelta[] deltas = transaction.getDeltas(Ooaofooa
+				.getDefaultInstance());
+		if (deltas != null) {
+			for (int i = 0; i < deltas.length; i++) {
+				if (deltas[i].getKind() == Modeleventnotification_c.DELTA_NEW
+						|| deltas[i].getKind() == Modeleventnotification_c.DELTA_ELEMENT_RELATED) {
 					return true;
 				}
 			}
