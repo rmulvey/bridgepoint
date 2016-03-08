@@ -1004,7 +1004,7 @@ INSERT INTO O_TFR
 	1,
 	'select any model related by self->GD_MS[R33]->GD_MD[R9] where selected.diagramId==param.diagram_id;
 // only check elements under the passed system
-if (CL::isContainedInSystem(element:model.represents, system_id:param.system_id))
+if (self.operationReturn_Uniqueid_Param_Boolean_Int != "" and CL::isContainedInSystem(element:model.represents, system_id:param.system_id))
   select one sourceSpec related by self->GD_ES[R30];
   select one targetSpec related by self->GD_ES[R31];
   select many graphicalElements related by model->GD_GE[R1];
