@@ -1,4 +1,7 @@
 package org.xtuml.bp.ui.text.activity;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 //====================================================================
 //
 // File:      $RCSfile: ActivityEditorInput.java,v $
@@ -21,13 +24,14 @@ import org.xtuml.bp.core.Modeleventnotification_c;
 import org.xtuml.bp.core.Ooaofooa;
 import org.xtuml.bp.core.common.ModelRoot;
 import org.xtuml.bp.core.common.NonRootModelElement;
+import org.xtuml.bp.ui.text.AbstractModelElementFileEditorInput;
 import org.xtuml.bp.ui.text.AbstractModelElementPropertyEditorInput;
 import org.xtuml.bp.ui.text.IModelElementEditorInputFactory;
 import org.xtuml.bp.ui.text.ModelElementID;
 import org.xtuml.bp.ui.text.ModelElementPropertyStorage;
 import org.xtuml.bp.ui.text.TextPlugin;
 
-public class ActivityEditorInput extends AbstractModelElementPropertyEditorInput {
+public class ActivityEditorInput extends AbstractModelElementFileEditorInput {
 
 	public final static String EDITOR_ID = "org.xtuml.bp.ui.text.activity.ActivityEditor"; //$NON-NLS-1$
 	public final static String FACTORY_ID = "org.xtuml.bp.ui.text.activity.factory"; //$NON-NLS-1$
@@ -90,8 +94,18 @@ public class ActivityEditorInput extends AbstractModelElementPropertyEditorInput
 	/**
 	 * @see org.xtuml.bp.ui.text.AbstractModelElementPropertyEditorInput#createStorage()
 	 */
-	protected ModelElementPropertyStorage createStorage() {
-		return new ModelElementPropertyStorage(this, "Action_semantics_internal"); //$NON-NLS-1$
+	protected IFile createStorage() {
+            IFile file = getFile();
+            if ( !file.exists() ) {
+                byte[] bytes = "".getBytes();
+                InputStream source = new ByteArrayInputStream(bytes);
+                try {
+            	    file.create(source, IResource.NONE, null);
+                } catch ( CoreException e ) {
+            	    System.out.println( e );
+                }
+            }
+	    return file;
 	}
 	public void doSaveDocument(IProgressMonitor monitor, Object element, IDocument document, boolean overwrite) {
 		if (element instanceof NonRootModelElement) {

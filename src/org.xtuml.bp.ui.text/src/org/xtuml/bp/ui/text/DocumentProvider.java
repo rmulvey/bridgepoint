@@ -75,9 +75,9 @@ public class DocumentProvider extends OALDocumentProvider
     throws CoreException
   { 
     boolean ret_val = false;
-    if (editorInput instanceof AbstractModelElementPropertyEditorInput)
+    if (editorInput instanceof AbstractModelElementEditorInput)
     {
-          InputStream is = ((AbstractModelElementPropertyEditorInput) editorInput).getStorage().getContents();
+          InputStream is = ((AbstractModelElementEditorInput) editorInput).getStorage().getContents();
           if ( is != null )
           {
               setDocumentContent( document, is, encoding) ;
@@ -187,7 +187,7 @@ public class DocumentProvider extends OALDocumentProvider
 	protected ISchedulingRule getSaveRule(Object element) {
 		UIJob test;
 		
-		if (element instanceof AbstractModelElementPropertyEditorInput) {
+		if (element instanceof AbstractModelElementEditorInput) {
 			IResourceRuleFactory fResourceRuleFactory= ResourcesPlugin.getWorkspace().getRuleFactory();
 			IFileEditorInput input= (IFileEditorInput) element;
 			if(input.getFile().exists()){
@@ -204,9 +204,9 @@ public class DocumentProvider extends OALDocumentProvider
 	protected ElementInfo createElementInfo(Object element) throws CoreException {
 		//ElementInfo info 
 		
-		if (element instanceof AbstractModelElementPropertyEditorInput) {
+		if (element instanceof AbstractModelElementEditorInput) {
 			
-			AbstractModelElementPropertyEditorInput input= (AbstractModelElementPropertyEditorInput) element;
+			AbstractModelElementEditorInput input= (AbstractModelElementEditorInput) element;
 			
 			IDocument d= null;
 			IStatus s= null;
@@ -262,11 +262,11 @@ public class DocumentProvider extends OALDocumentProvider
 	
 	class ModelSynchronizer extends AbstractModelElementListener{
 		
-		AbstractModelElementPropertyEditorInput input;
+		AbstractModelElementEditorInput input;
 		ModelElementID requiredModelElementID;
 		Ooaofooa modelRoot;
 
-		public ModelSynchronizer(AbstractModelElementPropertyEditorInput aInput){
+		public ModelSynchronizer(AbstractModelElementEditorInput aInput){
 			input = aInput;
 			NonRootModelElement requiredME = input.getRequiredModelElement();
 			if(requiredME == null){
@@ -405,15 +405,15 @@ public class DocumentProvider extends OALDocumentProvider
 		
 		ModelSynchronizer originalSynchronizer;
 		
-		SynchronizingDelegator(AbstractModelElementPropertyEditorInput input){
+		SynchronizingDelegator(AbstractModelElementEditorInput input){
 			super((IFileEditorInput)input);
 			if(input.exists()){
 				originalSynchronizer = new ModelSynchronizer(input);
 			}
 		}
 		
-		public AbstractModelElementPropertyEditorInput getInput(){
-			return (AbstractModelElementPropertyEditorInput)fFileEditorInput;
+		public AbstractModelElementEditorInput getInput(){
+			return (AbstractModelElementEditorInput)fFileEditorInput;
 		}
 		
 		

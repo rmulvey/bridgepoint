@@ -77,8 +77,8 @@ public class AbstractModelElementTextEditor extends TextEditor {
         
         // try to locate the reloaded content of this editor 
         // and point this editor to it
-        final AbstractModelElementPropertyEditorInput oldInput = 
-            (AbstractModelElementPropertyEditorInput)getEditorInput();
+        final AbstractModelElementEditorInput oldInput = 
+            (AbstractModelElementEditorInput)getEditorInput();
         EditorUtil.pointEditorToReloadedContent(this, oldInput.getModelElement(), null,
             oldInput.getModelRoot(), 
             new EditorUtil.CallerToPointEditorToReloadedContent() {

@@ -203,7 +203,7 @@ public abstract class AbstractModelElementEditorInputFactory implements IModelEl
 	 * provided in this class so that logic to store and restore can be kept at
 	 * single place.
 	 */
-	public void saveElement(AbstractModelElementPropertyEditorInput input, IMemento memento) {
+	public void saveElement(AbstractModelElementEditorInput input, IMemento memento) {
 		input.getModelElementID().saveTo(memento);
 	}
 	

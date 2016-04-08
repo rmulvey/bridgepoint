@@ -22,6 +22,7 @@
 //
 package org.xtuml.bp.ui.text.placeholder;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -35,6 +36,7 @@ import java.util.Vector;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFileState;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IPathVariableManager;
 import org.eclipse.core.resources.IProject;
@@ -78,6 +80,7 @@ public class PlaceHolderEntry {
 	
 	private ModelElementID modelElementID;
 	private String lastModelElementName;
+        private String placeHolderExtension;
 
 	private PlaceHolderManager placeHolderManager = null;
 	private List placeHolderFiles = new Vector(2);
@@ -104,15 +107,38 @@ public class PlaceHolderEntry {
 		return modelElementID.getModelRoot();
 	}
 	
-	IPath getPlaceHolderLocation(){
+        IPath getPlaceHolderLocation(){
         PersistableModelComponent pmc = getComponent();
         if ( pmc == null) {
             if(modelElementID != null && modelElementID.getComponentPath() != null){
-            	return new Path(modelElementID.getComponentPath());
+                return new Path(modelElementID.getComponentPath());
             }else{
-            	return null;
+                return null;
             }
-		}
+        }
+            IFile f = pmc.getFile();
+            if ( f != null ) {
+                IProject p = f.getProject();
+                if ( p != null && placeHolderExtension != null ) {
+                    IFolder folder = p.getFolder("activities");
+                    if (!folder.exists()) {
+                        try {
+                            folder.create(true, true, null);
+                        } catch ( CoreException e ) {
+                            System.out.println( e );
+                        }
+                    }
+                    IFolder subfolder = folder.getFolder(placeHolderExtension);
+                    if (!subfolder.exists()) {
+                        try {
+                            subfolder.create(true, true, null);
+                        } catch ( CoreException e ) {
+                            System.out.println( e );
+                        }
+                    }
+                    return subfolder.getFullPath();
+                }
+            }
         return pmc.getContainingDirectoryPath();
 	}
 
@@ -121,6 +147,8 @@ public class PlaceHolderEntry {
 	}
 	
 	IFile getPlaceHolderFile(ModelElementID id, String extension, Object requester, boolean toCreateNew){
+                placeHolderExtension = extension;
+
 		PlaceHolderFileProxy placeHolderFile = getPlaceHolderFileFor(extension); 
 
 		if(placeHolderFile == null && toCreateNew){
