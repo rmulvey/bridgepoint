@@ -13,7 +13,7 @@ Present:  Cort, Levi, Bob, Keith
 <pre>
 
 -- Num Type  Who  Section  Comment
-_- 01  min   Bob  general  name .ant.md
+x- 01  min   Bob  general  name .ant.md
 x- 02  min   Bob  3        second sentence, refer to old editor work, multi-buffer editor work
 x- 03  min   Cort 3        fourth sentence, add reference
 x- 04  min   Cort 4        Add a new requirement to explore during the design phase to explore if partial model upgrade is supported or if we require a whole model to be converted
