@@ -25,19 +25,36 @@ language dialects, and provide a more pleasing user experience.
 
 <a id="2.1"></a>2.1 [Parent issue #8417](https://support.onefact.net/issues/8417)  
 
+<a id="2.2"></a>2.2 [Multi-buffer editor issue](https://support.onefact.net/issues/1087)
+
+<a id="2.3"></a>2.3 [Multi-buffer editor analysis note](dts0100601533.ant)
+
+<a id="2.4"></a>2.4 [Multi-buffer editor design note](dts0100601533.dnt)
+
+<a id="2.5"></a>2.5 [Auto-complete editor issue](https://support.onefact.net/issues/506)
+
+<a id="2.6"></a>2.6 [Auto-complete editor analysis note](../506_enhanced_oal_editor/506_enhanced_oal_editor.ant.md)
+
+<a id="2.7"></a>2.7 [Rename refactoring editor issue](https://support.onefact.net/issues/7964)
+
+<a id="2.8"></a>2.8 [Rename refactoring editor analysis note](../7964_analysis_of_text_editor_cross_references/7964_analysis_of_text_editor_cross_references.ant.md)
+
 3. Background
 -------------
 
 This feature represents the convergence of many unrelated improvements. For a
 long time, there has been an interest in improving the OAL editor to provide
 more useful features like smart auto-completion based on an awareness of the in
-memory model. With OAL in files, it will be easier to leverage existing tools
-that are built on Eclipse resource infrastructure. Support for the modeling
-language MASL has recently been added to BridgePoint. Through this project, it
-became clear that our current strategy for storing actions does not naturally
-lend itself to multiple action language dialects and editors. We have also
-considered ideas such as creating a tabbed editor that can view many dialects
-of modelling actions and the corresponding generated code at the same time.
+memory model ([[2.5]](#2.5), [[2.6]](#2.6)). Desire for a multi-buffer
+editor with easy signature editing ([[2.2]](#2.2), [[2.3]](#2.3), [[2.4]](#2.4))
+and rename refactoring ([[2.7]](#2.7), [[2.8]](#2.8)) has also been expressed.
+With OAL in files, it will be easier to leverage existing tools that are built
+on Eclipse resource infrastructure. Support for the modeling language MASL has
+recently been added to BridgePoint. Through this project, it became clear that
+our current strategy for storing actions does not naturally lend itself to
+multiple action language dialects and editors. We have also considered ideas
+such as creating a tabbed editor that can view many dialects of modelling
+actions and the corresponding generated code at the same time.
 
 Each of these features is made possible if actions are stored apart from the
 model data in files. This is the first step to a more pleasant modeling
@@ -107,9 +124,11 @@ Dependency on `Action_Semantics` comes in two flavors:
 Reading and writing activities accounts for the vast majority of dependencies
 on the `Action_Semantics` field. This is used for editing, parsing, building,
 and various other features such as populating graphical elements. This is not
-a straightforward solution because there is some manipulation of the actions
+a straightforward task because there is some manipulation of the actions
 at the modeling level. An external entity to get and set actions will be
-explored as a possible solution.
+explored as a possible solution. We will also consider whether or not we should
+be processing action semantics at the modeling level and the work required
+to refactor those features.
 
 5.3.2 Determining behaviors
 
@@ -135,13 +154,15 @@ operation `op2` on class `class2` defined in component `comp2` may be named
 
 5.4.2 Directory structure like `models` directory
 
-In this scheme, the directory structure of the actions would mirror that of
-the models. The activity files themselves would live in the corresponding
-directory to that of the `.xtuml` file that defines them in the `models`
-directory. See the pictures below. A variation on this scheme could see
-the action files living in the `models` directory with the `.xtuml` files.
+5.4.2.1 In this scheme, the directory structure of the actions would mirror
+that of the models. The activity files themselves would live in the
+corresponding directory to that of the `.xtuml` file that defines them in the
+`models` directory. See the pictures below.
 
 ![naming](naming.png)
+
+5.4.2.2 A variation on this scheme could see the action files living in the
+`models` directory with the `.xtuml` files.
 
 5.4.3 Combined files scheme
 
@@ -159,7 +180,18 @@ or `activities`. Within this directory, subdirectories could exist containing
 action semantics for each of any number of dialects each named after the
 dialect. For example, subdirectories could be `oal` and `masl`.
 
-5.4 Extension
+5.5 Multi-buffer and signature editing
+
+The vision for a future activity editor a multi-buffer editor with activity
+signatures in text. This would allow users to edit many related activities in
+one file and edit return types, parameters, and parameter types without relying
+on the model explorer tree. The work to achieve this is reasonably separate
+from the work to move to persistence in files, so we will consider implementing
+it as a separate issue. However, in order to spare users from too many intrusive
+model upgrades, we will consider the pros and cons of including the multi-buffer
+project in this work during the design phase.
+
+5.6 Extension
 
 A working action language editor is made up logically of two parts. The editor
 itself, and the code that integrates the editor with the model, allowing a
@@ -167,17 +199,14 @@ user to use the model explorer, canvas, or CMEs to launch the editor. These
 two parts will be built as separate plugins. This will allow future editors
 to be added with very minimal change.
 
-5.4 Backwards compatibility
+5.7 Backwards compatibility
 
 We will need to continue to support the use of the `Action_Semantics` field at
 least temporarily. This work shall be built to enable a user to load and use
-models with actions stored in the `Action_Semantics` field. A mechanism for
-will be provided for users to move all of the actions to files at once. We will
+models with actions stored in the `Action_Semantics` field. A mechanism will
+be provided for users to convert all of the actions to files at once. We will
 explore a mechanism to slowly upgrade to file based actions only when the
 action has been changed.
-
-Completely removing the `Action_Semantics` field from the meta-model is out of
-the scope of this feature.
 
 6. Work Required
 ----------------
@@ -202,21 +231,21 @@ field
 6.8 Build a mechanism for a graceful transition from using the 
 `Action_Semantics` field to using files
 
-6.9 Write a helper function to create files from the `Action_Semantics` fields
-all at once
-
-6.10 Identify and address special situations such as copy/paste, move, rename
+6.9 Identify and address special situations such as copy/paste, move, rename
 of model elements and appropriately renaming the activity file
 
 7. Acceptance Test
 ------------------
+
+Repeat each test scenario for each type of action home
 
 7.1 Create an activity, open it, edit it, save it. Verify that the activity
 file has been created on the file system
 
 7.2 Copy/paste an activity in a BridgePoint model. Verify that the name and
 location of the activity file has been changed accordingly. Verify that you
-can still open and edit the activity.
+can still open and edit the activity. Verify that the old model element is
+not affected when edits are made to the copied model element actions.
 
 7.3 Rename an activity in a BridgePoint model. Verify that the name of the
 activity file has been changed accordingly. Verify that you can still open

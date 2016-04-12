@@ -1,0 +1,541 @@
+========================================================================
+
+File:      $RCSfile: dts0100601533.ant,v $
+Version:   $Revision: 1.20 $
+Modified:  $Date: 2010/08/05 16:36:03 $
+
+(c) Copyright 2007-2010 by Mentor Graphics Corp. All rights reserved.
+
+========================================================================
+This document contains information proprietary and confidential to
+Mentor Graphics Corp., and is not for external distribution.
+========================================================================
+
+BridgePoint Project Analysis Note
+Provide a better way (faster) for defining and editing function signatures
+
+1. Abstract
+-----------
+Creating and editing function signatures in BP is time consuming.  This issue
+is raised to propose solutions to make BridgePoint easier to use in this
+situation.
+
+2. History
+----------
+2.1 dts0100601533.ant-01.rvm
+    This review was done early in the project when the project was assigned 
+    to Eman Tarak.  This note was worked on a lot after this, but it was never
+    re-reviewed.  This issue is now being picked-up by Nehad Mohamad.  
+
+2.2 dts0100601533.ant-02.rvm
+    The review was done after a presentation of the current state of the work.
+    This note does need to be reviewed again, but it needs to be fully reviewed.
+    We stopped after the requirements section.
+    
+3. Document References
+----------------------
+[1] ClearQuest DEI dts0100601533
+[2] ClearQuest DEI dts0100599869
+    Provide a method for importing functions into BP
+[3] ClearQuest DEI dts0100608023
+    Model-based model compiler MC-C
+[4] <cvs>com.mentor.nucleus.bp.als.oal/bnf/oal.bnf
+    The OAL parser grammar.
+[5] IMP - http://www.eclipse.org/imp/    
+    IMP is an Eclipse project whose goal is to provide an extensible platform 
+    for the development of high-quality, fully-featured, language-specific 
+    IDE's in Eclipse. 
+    
+4. Background
+-------------
+This problem has always existed in BridgePoint.  The work to complete
+a modeled model compiler [3] pushed this issue to the front of the line in 
+the category of issues to help make BridgePoint easier to use.  The MC 3020 
+model compiler has hundreds of functions that had to be converted into OAL and
+defined in the MC3020 model.  These functions have complex parameters and
+return types.  To facilitate this work, an import tool was investigated 
+[2] and used, but that tool would not have been needed if BridgePoint was easier
+to use in situations like this. 
+If we assume for a moment there are 500 functions and each must be touched only 
+1 time and it takes 1 minute per edit, that would be 8 and a half hours of 
+editing. Consider what happens when a mistake is made in this edit or a 
+parameter/return type must be changed.   In most programming languages, a task 
+like this would be completed with a copy/paste/edit.  Many editors in this 
+situation allow recording and play back of the sequence used to make changes 
+like this (or it can be done in a script).  In most languages a task like this
+can be performed in a fraction of the time (minutes).   This issue is raised 
+to make this process easier in BridgePoint.
+
+5. Requirements
+---------------
+There is no SRS for this issue.  Of course requirements are of the utmost 
+importance.  Therefore, this separate section has been created to clearly 
+state the simple requirements for this project outside of the analysis section.
+
+5.1 There will be only 1 OAL parser in the tool.
+5.1.1 The OAL editor will handle more than 1 action in a single buffer.
+5.1.2 "Edit with OAL editor" will open the buffer with all present actions (all 
+	operations in a class, all functions in a package, etc) into a single 
+	buffer.
+5.1.3 When a user double clicks on an OAL activity -e.g Bridge - The cursor 
+    will be aligned at the beginning of the action clicked.
+
+5.2   Signature Creation and Manipulation
+5.2.1 The user shall be able to add and edit the entire signature 
+    (name, parameters, and return type) at once and will not be required to 
+    edit/add pieces of the signature separately using the user interface. 
+5.2.1.1
+	This should be applicable to the signatures of the following activity 
+    types: 
+      	Functions, model class operations (class based and instance based 
+      	operations), Bridges,  Mathematically Derived Attribute (MDAs), 
+      	interface signal and interface operation. Note that Events, State 
+      	Actions and Transition shall be edited just as they are today.
+5.2.2 Signature editing can be done by copy/paste.
+5.2.3 The current ME behavior will remain.
+5.2.4 All changes should be reflected in both ME/Outline and the OAL Editor
+5.2.4.1 Changes edited into the ME will be reflected into the buffer editor 
+      (on refresh or the next open).
+5.2.4.2 "The last edit wins."  
+      If the edit occurs in the tree, the signature is updated in the OAL. 
+      If the edit occurs in the OAL, the tree is updated to reflect the 
+      change.
+5.2.4.3 Use cases will be defined in the design note to report the behavior that
+	  shall occur when a dirty buffer is present while the user modifies ME.
+	  examples for possible solution :
+	    Present a dialog
+		Make ME read-only when there is a dirty buffer.
+      
+5.2.5 Nothing gets committed to the persistent meta-model until the user selects 
+	save.
+5.2.6 Syntax highlighting must behave as it does today. Syntax errors in the 
+    multi-edit buffer should be reported the same as they were reported in the 
+    current OAL editor.
+5.2.7 Editing one action can not effect the OAL of another action. The purpose 
+    is to prevent cascading errors from causing us to lose meta-model elements 
+    when the user selects save.
+5.2.8 Syntax feedback must happen in the same timeframe that it does today.
+    We will use OAL Validation functions (member_access_loop11()) for this test.
+
+6. Analysis
+-----------
+6.1 Modify the existing OAL grammar and add support to the function signature.
+6.1.1 The existing "entry point" parser rule for the OAL shall NOT be modified.  
+      In the parser grammer [4] this rule is:
+		action[OalConstants type]
+  		:
+    		block[true]
+    		EOF!
+  		;
+      
+      Instead, a new rule shall be added that simply calls the old rule.      
+
+6.2   Add support for the new signature in the OAL Editor
+6.2.1
+        The current ActivityEditor need to be adapted to support the new 
+        requirements. 
+        Any time a function, operation, bridge or event is Double-clicked, this 
+        Editor will be opened but with cursor showing and pointing to the 
+        signature and associated OAL code (if exists) of the selected element. 
+        
+
+		The action body would look like this in the OAL editor:
+	       activity <return_val> ${O_obj.Name}_name(<parameters>)
+			begin
+	       <body statements>
+            end activity;  
+			
+			activity <return_val> ${O_obj.Name}_name(<parameters>)
+            begin
+	       <body statements>     
+            end activity;  
+			.
+			.
+			.
+			           
+        In the case of an event, interface signal or operation, it will be:
+           activity <return_val> ${O_obj.Name}_name(<parameters>)
+           end activity;
+           activity <return_val> ${O_obj.Name}_name(<parameters>);
+			end activity;  
+			.
+			.
+			
+
+6.2.1.1 The unified grammar approach for different OAL contexts must consider
+	the activities with OAL body vs activities without oal body.  This will 
+	leads us to have what looks like function prototype.
+    e.g. considering External Entity OAL editor, this code will be valid :  
+     activity void bridgeOne(real arg)
+     begin
+     number = arg;
+     activity end;
+     
+     activity  void bridgeOne(real arg) 
+     activity end;
+			
+6.2.1.2 The access modifier field is a special case for model class operation. 
+	The signature for it will be : 
+    activity <access modifier> <return_val> ${O_obj.Name}_name(<parameters>)
+			begin
+	       <body statements>
+            activity end;
+    To simplify, the general grammar rule will be implemented in this issue
+    and a separate issue will be raised to address this special case.
+      
+6.2.2  What about state actions? Are they to be shown alongside the other 
+	activities? If so, we need to somehow prevent editing of the event data 
+	items (what is the requirement? do we show these in place of parameters in 
+	this case?).  
+	These cannot be changed in an editor, the tool has to control this.
+
+6.2.3 IMP [5]
+    Is is an alternative to modifying our existing editors to support the 
+    function signature.
+
+	This project aims to ease the process of creating an Integrated Environment 
+	for new languages or old.  So basically you go through many wizards in 
+	order to generate an eclipse editor.  They have support for the following:
+
+	* Build services (Incremental Builder, Nature Enabler, 
+  	  Poor Man's Compiler <- not sure what this is)
+	* Core services (Indexer, Reference Resolver)
+	* Creation services (New project wizard, preferences)
+	* Editor Services (Annotation hover, Auto-Edit strategy, Content proposer, 
+  	  Documentation provider, Editor Actions Contributor, Editor annotation 
+  	  creator, Token Colorer, Hover help, Introduced editor service, 
+  	  Occurrence marker, Presentation specification, source folding, source 
+  	  formatter, Tree model builder / label provider with outline view support
+	* Grammar support (LPG with parser wrapper)
+	* Transformation Services (Refactoring)
+
+	A language defined by these plug-ins is itself extendible, meaning 
+	customers could have custom editors/parsers and so forth.
+
+	Working through the the examples, it is possible to create an editor with 
+	folding, token colorer, auto-completion, etc within minutes.  
+	Of course this does not have a real model backing the editor. However, we 
+	could convert our antlr grammar to the LPG grammar language and tie in the 
+	checks to our existing ooaofooa methods. 
+	 
+	The parser showed errors appropriately, and using the Editor annotation 
+	creator you get problem markers.
+
+
+6.3  Parsing and Validating the new editor buffer 
+6.3.1 The existing editor is arranged so that no changes to the metamodel are 
+	made until the user saves the editor. 
+	The new editor behavior must function the same way.
+6.3.2 If user is editing a bunch of activities in this new editor, and the user 
+      changes more than one of them, presumably saving updates both functions?
+      What happens if one activity calls another which you have also edited in 
+      the same buffer? When do the parser errors appear/disappear?
+6.3.3 The tool previously managed the data item sets in the UI. 
+      Allowing editing of these would break or go around that functionality
+6.3.4 In implementing the instance creation, parser will have to find and remove 
+      or rename an existing bridge instance for example, otherwise it will end 
+      up with Bridge_c instances named:
+		F
+		Fo
+		Foo
+	as the name is typed. This should work like creating Variable_c instance.
+6.3.5 The activity which is got change is the only one shall be parsed to 
+	maintaining parser performance. This will be done using document 
+	partitioning. the partition which is edited is the one will be parsed.
+	  
+
+6.4  Model Explorer/Outline and Editor Synchronization 
+6.4.1 Should the editor be alpha sorted or reflect the order set in tree ?
+6.4.2 Should user be able to affect the order by moving your definition in the 
+      editor? 
+
+6.5     Possible Future Enhancements
+        These are items that have been discussed but are NOT part of the 
+        requirements and shall not be done with this issue.  Seperate
+        issues shall be raised for each of these items.
+        
+6.5.1   Searching and manipulating function signatures in the xtuml model
+
+        The user must be able to search for xtuml model elements (like 
+        functions, states....) by name and/or other attributes.
+        Given the search result, the user can choose to edit the function
+        signature in the following ways.
+	       All at once (for example, replace all)
+	       Individually (for example, replace/find next)
+        
+		In the Menu "Search"-> "Search" add a tab called "Xtuml Model Search". 
+        The user can select element type to search for as for example "signature 
+        search" where the user can select to search for signature name,
+        return or parameter.
+        This tab can show button for "Next", "Replace", "ReplaceAll" to edit the 
+        search result
+        
+        This can be done by adding new plugin "com.mentor.nucleus.bp.ui.search" 
+        this plugin can extends "org.eclipse.search" according to the extension 
+        points "searchPages", "textSearchEngine" and "searchResultViewPages".
+
+6.5.2   Folding
+ 
+        In OAL Editor, folding to control structures like "If Construct", 
+        "For Each Loop", "While Loop", "Signature code" and "Nested Control 
+        Logic" can be supported.
+
+        This can be done with the following changes:
+
+6.5.2.1 A new array list could be maintained while parsing any activity. It 
+        would hold the starting and ending positions of all folded structs.
+        This would require changes: 
+          a) grammer.xtuml in "com.mentor.nucleus.as" to add "folding_required"
+             as a boalean attribute in class "Node"
+          b) grammer_enhancer.arc in "com.mentor.nucleus.as" 
+             so that for every "Node" that support folding a code will be 
+             generated to maintain the start and end position  before the 
+             calling of "fncname_start" and "fncname_end" respectively.
+             Then, the positions will be reflected in that array.
+6.5.2.2 A new action will be added to the OAL text editor that runs after the 
+        parsing.  This action is responsible for updating the 
+        ProjectionAnnonation model with new positions obtained from the array 
+        list.  This will require changes in "com.mentor.nucleus.ui.text" 
+
+6.5.3 Signature Refactoring
+
+      With signature refactoring, the user shall be able to change the 
+      signature name ( in both ME or OAL Editor). The change in the name can be 
+      applied to all occurrences of that signature throughout model or to some 
+      selected occurrences.  This also can be applicable to other types of 
+      elements in the model.
+6.3.3.1
+      A new entry could be added in the CME menu for "Refactoring" in both
+      ME view or OAL editor. This entry should support "Rename". 
+      When selected, a new view should show the occurrences of that signature 
+      in the model.  These occurrences can be selected or deselected.
+      The user can then apply name changes to all signature occurrences or just 
+      selected ones. 
+     
+     
+7. Work Required
+----------------
+7.1    Signature Creation and Manipulation
+       
+       Consider Sign_modelElem to be Operation_c, Function_c, 
+       Bridge_c, RequiredSignal_c, RequiredOperation_c, ProvidedSignal_c,
+       ProvidedOperation_c, StateMachineEvent_c.
+ 
+       Consider signsOAL_modelElem to be ModelClass_c, FunctionPackage_c, 
+       ExternalEntity_c, InterfaceReference_c and StateMachine_c. 
+       
+7.1.1   Add the signature text in the OAL editor 
+7.1.1.1 Parser and validation changes
+7.1.1.1.1
+        The parser must support parsing multiple Code Units, where each 
+        unit consists of signature and OAL code or a signature only for the 
+        case of StateMachineEvent_c, ProvidedSignal_c and RequiredSignal_c.
+          
+        These changes shall be reflected in oal.bnf file.
+7.1.1.1.2          
+        Validation will be done by OAL Validation functions in the 
+        "OAL Validation Functions.xtuml"
+
+7.1.1.2 UI changes.
+7.1.1.2.1     
+        For the Elements in signsOAL_modelElem set, the popup menu entry 
+        "Open With" will contain "OAL Editor" to show the new adapted Activity
+        Editor.
+        
+        This will require changes In  
+        com.mentor.nucleus.bp.ui.text\arc\create_plugin_xml.arc
+
+7.1.1.2.2
+       The Activity Editor in "com.mentor.nucleus.bp.ui.text" need to be updated
+       with following functionality:
+		  1) syncronizeWithME() to get the signature and action semantic for 
+             all associated elements that is in Sign_modelElem set.
+             Maintain an index for the start location of each signature. 
+             This function needs to be called for any changes in ME to be 
+             reflected in the OAL Editor contents.
+7.1.1.2.3                 
+       In "com.mentor.nucleus.bp.core" add functions:
+         1) getAction_semantics_internal()
+         	This function retrieve all signatures and oal 
+            code for that class( for example).
+7.1.1.2.4
+       The "New" action Handler for Sign_modelElem should populate the 
+       signature string in the Activity Editor.
+7.1.1.2.5
+       Any change in either the OAL editor or ME should be reflected into the 
+       other. If a change is applied on ME, the "signature" statement should be 
+       added or updated in the OAL Editor.  If changes is applied using OAL 
+       Editor, ME needs to be refreshed.
+7.1.2 Document Partitioning
+7.1.2.1 Partitioning Rule : New  partition rule shall be added to 
+		OALPartitionScanner.java for  activity.
+7.1.2.2 The new rule shall be added in the OALDocumentProvider constructor and
+		OALEditorConfiguration.getConfiguredContentTypes().
+7.1.2.3 Update OALEditorConfiguration.getPresentationReconciler() for syntax 
+		highlighting.
+7.1.2.4 Listening to user editing can be done in two different approaches 
+	- may be both :-
+	7.1.2.4.1	PartitionListener class need to be introduced. This class 
+	implements IDocumentPartitioningListener and 
+	IDocumentPartitioningListenerExtension2	interfaces and overrides 
+	documentPartitioningChanged() method.
+	7.1.2.4.1	OALParitioner class need to be introduced. This class implements
+	FastPartitioner class, and overrides documentChanged2() method.
+	
+	This listener shall replace the Listener class - inner class 
+	for ActivityEditor.
+	The Designer need to decide which approach to use and justify it.
+
+7.1.2.5 The new listener job is to determine the affected partitions and pass
+	them only to the parser.
+
+
+8. Acceptance Test
+------------------
+8.1 Verify that adding functions is a simple task (this is a manual test)
+_- Create one hundred functions each with 5 parameters.  The function
+   signatures are as follows:
+   activity void this_is_a_new_function1(int i1, int i2, int i3, string s1, string s2)
+   {}  end activity;
+   activity void this_is_a_new_function2(int i1, int i2, int i3, string s1, string s2)
+   {} end activity;
+   activity void this_is_a_new_function3(int i1, int i2, int i3, string s1, string s2)
+   {} end activity;
+   ...
+_R This procedure takes less then 1 minute   
+_R Parse all shows no errors
+_R code is successfully generated
+_R Verifier can successfully execute each function
+   -note that to test this a simple domain function shall be written that calls
+   each function.
+
+8.2 Verify that editing functions is simple task (this is a manual test)
+
+_- Using the functions created in 7.1, modify the parameters of 
+   *function1 through *function50 so the parameter that is currently "int i3"
+   becomes "string s3".
+_R This procedure takes less then 1 minute   
+_R Parse all shows no errors
+_R code is successfully generated
+_R Verifier can successfully execute each function
+   -note that to test this a simple domain function shall be written that calls
+   each function.
+    
+
+8.3 Verify that all data types are supported (parameter and return values) 
+    and proper error handling occurs
+_- Create a simple, temporary,  test matrix to perform this task
+_- Review this test matrix with the team
+_- Write an archetype to generate the "real" test matrix
+_- Use the test generation utility to create unit tests
+_- Implement the generated unit tests
+
+
+8.4 The design note shall extend this test to cover use cases part such 
+	as 5.2.4.3 and cover all create use case for all of the requirements
+
+    
+End
+---
+
+$Log: dts0100601533.ant,v $
+Revision 1.20  2010/08/05 16:36:03  nmohamad
+job:dts0100601533
+update the partitioner listener  in the design section and  8.4  in the unit test section
+
+Revision 1.19  2010/08/02 17:45:54  nmohamad
+job:dts0100601533
+Update the analysis note with  Document Partitioning
+
+Revision 1.18  2010/07/26 15:20:29  nmohamad
+job:dts0100601533
+Addressing review minutes.
+
+Revision 1.17  2010/07/22 19:57:29  rmulvey
+job:dts0100601533
+Fixed some grammar problems.
+
+Revision 1.16  2010/07/22 19:05:09  nmohamad
+job:dts0100601533
+Addressing comments and questions in the skype group conversation in 20th and 21th of Juy  with Cortland, Campbell and Bob
+
+Revision 1.15  2010/07/22 16:18:21  nmohamad
+job:dts0100601533
+Add  new requirement 5.2.3.1 based one  Cort's observation in the old review minutes
+
+Revision 1.14  2010/07/22 16:04:34  nmohamad
+job:dts0100601533
+Change part of the implementation methodology
+
+Revision 1.13  2010/07/22 14:30:02  rmulvey
+job:dts0100601533
+Moved the old review minutes from the document archive into the R3_1_5 review minutes folder because this note was never re-reviewed.
+
+Revision 1.12  2010/07/22 14:21:33  rmulvey
+job:dts0100601533
+Fixed a numbering problem.
+
+Revision 1.11  2010/07/22 14:19:29  rmulvey
+job:dts0100601533
+Made a pass through the document as Eman left it to help prepare for a re-review of the document now that Nehad has taken over this project.
+
+Revision 1.10  2010/02/18 12:05:45  etarek
+job:dts0100601533
+adding limit req and change work required
+
+Revision 1.9  2010/02/17 18:28:33  etarek
+job:dts0100601533
+adding some requirment changes
+
+Revision 1.8  2010/02/17 13:28:59  etarek
+job:dts0100601533
+add new future enhancement
+
+Revision 1.7  2010/02/17 13:24:25  etarek
+job:dts0100601533
+changes in work required
+
+Revision 1.6  2010/02/16 15:09:10  etarek
+job:dts0100601533
+changes in work required for signature creation
+
+Revision 1.5  2010/02/15 17:41:05  etarek
+job:dts0100601533
+changes in requirements
+
+Revision 1.4  2010/02/15 17:25:16  etarek
+job:dts0100601533
+adding some proposed works
+
+Revision 1.3  2010/02/15 15:21:03  etarek
+job:dts0100601533
+adding some changes in requiremnts  and work req
+
+Revision 1.2  2010/02/12 08:08:32  etarek
+job:dts0100601533
+adding some requirment changes
+
+Revision 1.6  2010/01/05 04:29:31  kbrown
+job:dts0100644853
+Batch commit of copyright change from 2009 to 2010 for BP CVS projects.
+
+Revision 1.5  2009/08/18 11:40:59  rmulvey
+job:dts0100601533
+Added section 5.3 about a Eclispe project called IMP that aim to help the process of creating an IDE for new languages.  This may be useful for the editor creation/modification portion of this project.
+
+Revision 1.4  2009/07/20 14:03:40  rmulvey
+job:dts0100598269 dts0100589755 dts0100539600
+Updated note following review
+
+Revision 1.3  2009/07/17 20:15:35  rmulvey
+job:dts0100601533
+Updated
+
+Revision 1.2  2009/07/17 19:34:36  rmulvey
+job:dts0100601533
+Updated
+
+Revision 1.1  2009/07/17 16:52:36  rmulvey
+job:dts0100601533
+Introduced
+

@@ -1,0 +1,261 @@
+========================================================================
+
+File:      $RCSfile: dts0100601533.dnt,v $
+Version:   $Revision: 1.3 $
+Modified:  $Date: 2010/03/11 06:45:09 $
+
+(c) Copyright 2007-2010 by Mentor Graphics Corp. All rights reserved.
+
+========================================================================
+This document contains information proprietary and confidential to
+Mentor Graphics Corp., and is not for external distribution.
+========================================================================
+
+BridgePoint Project Design Note
+Provide a better way (faster) for defining and editing function signatures
+
+
+1. Abstract
+-----------
+This notes describe how creation and editing signature can be faster and user 
+friendly. Also how to make OAL editor support folding.
+
+2. History
+----------
+None
+
+3. Document References
+----------------------
+[1] ClearQuest DEI dts0100601533
+[2] ClearQuest DEI dts0100599869
+    Provide a method for importing functions into BP
+[3] <CVS>:Documentation/technical/notes/dts0100601533/dts0100601533.ant
+
+4. Background
+-------------
+4.1 Introduction
+
+Consider Sign_modelElem to be Operation_c, Function_c, 
+Bridge_c, RequiredSignal_c, RequiredOperation_c, ProvidedSignal_c,
+ProvidedOperation_c, StateMachineEvent_c. 
+
+Consider ModuleEditor_modelElem to be ModelClass_c, FunctionPackage_c, 
+ExternalEntity_c, Interface_c and StateMachine_c. 
+
+The elements in the set Sign_modelElem are the elements that can have a 
+prototype signature. While elements in the set ModuleEditor_modelElem can
+have an editor to show the signature and OAL code(if exist) of the corresponding 
+elements in Sign_modelElem set.
+ 
+4.2 The Editors UI
+
+The plugin com.mentor.nucleus.ui.text have two extension to the 
+"org.eclipse.ui.texteditor.BasicTextEditorActionContributor" for both
+"DescriptionEditor" and "ActivityEditor"
+ 
+Every element in the model explorer is associated with one of the Editors
+or both of them. Elements in  Sign_modelElem set are associated with both 
+of them. while elements in the ModuleEditor_modelElem is only associated 
+with "DescriptionEditor" Editor.
+
+For the "ActivityEditor" any change in the OAL code will trigger 
+IDocumentListener listener, which in turn initializes and starts the 
+parsing Thread "ParseRunnable". 
+
+4.2 The OAL parser
+
+The parsing Thread calls TextParser.action(), which in turn calls the 
+OALparser.action() for the ModelElement associated with the "ActivityEditor"
+  
+Action is the starting rule of oal.bnf, which calls other rules. "oal.g" is 
+generated from the oal.bnf file. 
+ In the generated file:
+   any rule will be translated to function with name ${rule_name}, the function 
+   body enclose the call of other rules by ${rule_name}_start() and 
+   ${rule_name}_end().
+   any rule when called by other rule will be succeeded by validation function
+   to that rule ${rule_name}_validate()
+  
+  
+5. Analysis
+-----------
+5.1 The Editor UI
+
+A new Editor called "ModuleEditor" will be associated with elements in
+the set ModuleEditor_modelElem.  
+
+This Editor when opened will be populated with the the signature and 
+OAL code(if exist) of corresponding elements in Sign_modelElem set.
+This implies that every element in ModuleEditor_modelElem have a 
+buffer for that Editor population.
+
+Any change in the ME is done Within a "Transaction", this change
+should be reflected in the "ModuleEditor". This implies that 
+"ModuleEditor" to have "ITransactionListener" that refresh its text
+contents after any Transaction.
+
+Any correct change in the Editor will be reflected in ME too. This requires 
+The Parsing action to be done within a Transaction. So the  
+ITransactionListener of the ME will be refreshed upon the end of the
+transaction. This assumes that the parser will be completely responsible for
+applying any change of the memory instances of the model elements due to 
+signature changes.
+
+
+6. Design
+---------
+6.1 The Editor UI
+
+The plugin "com.mentor.nucleus.ui.text" will have a third extension to the 
+"org.eclipse.ui.texteditor.BasicTextEditorActionContributor" named 
+"ModuleEditor". This require changes in "create_plugin_xml.arc" to
+add the new Extension.
+
+An extra entry the context menu "OpenWith" will be added, this entry 
+is called "ModuleEditor". This only for elements in the set 
+ModuleEditor_modelElem. This require changes to the "plugin.xml" in
+the plugin "com.mentor.nucleus.ui.text" to add new "ObjectContribution"
+for these elements. This requires the following changes 
+  -The function get_editor_obj_set() in create_util.inc to 
+   return "module_obj_set" that represents the set elements.
+  -Also change "create_plugin_xml.arc" to loop over the elements of the
+   "module_obj_set" set to add object "ObjectContribution" the generated
+   "plugin.xml"
+  -Make the new Editor the default Editor for ModuleEditor_modelElem elements
+   This should change "create_plugin_xml.arc" to loop over the set 
+   "module_obj_set" to make it the default.
+  -Add a java class "ShowModuleAction.java" to show the new Editor
+
+The Editor ModuleEditor will be populated, upon creation, reseting or 
+refreshing from Property "Module_body". This property dynamically construct the
+correct module body. This will require the following changes
+  - In the "Core" meta-model: a new property "Module_body" will be added to
+    Every elements in the set ModuleEditor_modelElem. This property when "get"
+    is called to this property it will construct the correct body.
+
+The Synchronization between ME and the ModuleEditor will be supported by
+Transaction Manager - as any change within Transaction will notify all
+Transaction Listeners.
+   Any change in ModuleEditor will trigger document change Listener that parses
+   the Text, the parsing Action will occur Within a Transaction
+	  tr =tm.startTransaction("Parsing Module", Ooaofooa.getDefaultInstance());
+	  parser.action(m_modelElement);
+	  PlatformUI.getWorkbench().getDisplay().asyncExec(
+		new Runnable() {
+			public void run() {				
+				tm.endTransaction(tr);
+			}
+		});	
+
+
+Any change in ME will trigger all ITransactionListener,
+So a new ITransactionListener will be added to ModuleEditor,which is responsible 
+for re-populating the ModuleEditor. This listener will  refresh the  text 
+contentsOAL from the memory instances. 
+The function can be
+	RefreshOAL(){
+		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+			public void run(){
+				try{
+				   ae_provider.getDocument(input).set(input.getPropertyValue());
+				   ActivityAnnotationModel m_myAnnotationModel = 
+				    	(ActivityAnnotationModel)ae_provider.
+				    			getAnnotationModel(input);
+				   m_myAnnotationModel.connect(ae_provider.getDocument(input));
+				    input.doSaveDocument(new NullProgressMonitor(), 
+				         input, ae_provider.getDocument(input), true);
+				   }catch(Exception ex){
+				       ex.printStackTrace();
+				   }
+				}
+				});
+	}
+The Editor will refresh from the property "Module_body" getter.
+   input.getPropertyValue()
+
+To avoid forth and Back calls between Transaction listeners of  both 
+ModuleEditor and the Model Explorer flag are added to avoid null change 
+propagation.
+
+6.2 The Module body parser
+
+The Module body can be represented by the following bnf rule
+    module_action[OalConstants type]
+	  :
+	  	(
+		  	invocation_signature
+			  (
+			  	 Semicolon!
+			  	 |
+			  	 "begin"
+			  	 action[type]
+			  	 "end"
+		  	 )
+	  	 )*
+	  ;
+This rule is a new Entry to the parser. In The case of the set 
+ModuleEditor_modelElem elements, the parser will call this entry. 
+
+In the generated parser: this entry will looks like
+      module_action(){
+      	module_action_start()
+      	loop:
+      		module_action_loop_start()
+      		  if(not Semicolon )
+      		  		invocation_signature()
+      		  		invocation_signature_validdate()
+      		  		block()
+      		  		block_validate()
+      		  else
+      		  end if
+      		module_action_loop_end()
+      	module_action_end()
+      }
+This function Should do the following
+	-parse the Module body correctly
+	-conclude the changes needed in the structure of the model and apply them.
+	-when parser doesn't parse correctly nothing in the structure of the model 
+	 will change.
+This requires the following:
+  on the function module_action_start():
+   A separate instance for the element in the set ModuleEditor_modelElem will 
+   be created.
+  Then from the analysis of the parser the expected resulted model is 
+   concluded. This analysis starts in function invocation_signature(). This 
+   function is responsible for creating instances of return_date_type, 
+   activity_name( element in the set Sign_modelElem) and its corresponding 
+   parameters. Then it creates Action_id and delivers it to block() function,
+   so that the other part of the parser is not affected and work the same as
+   in "ActivityEditor" case.  
+  on the function module_action_end(), when text is parsed correctly, the old
+  reference for ModuleEditor_modelElem element will be replaced with the new 
+  one. The old objects in the memory will be removed by Garbage collector as 
+  no reference is pointing to it.
+
+
+7. Design Comments
+------------------
+
+
+8. Work Required
+----------------
+
+9. Unit Test
+------------
+
+End
+---
+
+$Log: dts0100601533.dnt,v $
+Revision 1.3  2010/03/11 06:45:09  etarek
+job:dts0100601533
+modify parser design
+
+Revision 1.2  2010/03/10 16:56:51  etarek
+job:dts0100601533
+design notes for the parser part
+
+Revision 1.1  2010/03/10 15:12:06  etarek
+job:dts0100601533
+design notes for the UI part
+
