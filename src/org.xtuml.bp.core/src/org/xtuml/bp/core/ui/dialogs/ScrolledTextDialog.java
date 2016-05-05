@@ -40,6 +40,14 @@ import org.eclipse.ui.PlatformUI;
 
 import org.xtuml.bp.core.CorePlugin;
 
+// TODO: FIXME BOB Update this dialog to be more flexible, like
+// UIUTIL.openMessageDialog that allows an array of dialog button
+// text to be passed in, so the caller chooses the buttons.
+// Assure that when running headless we do not popup a dialog
+// (handle it like we do UIUTIL.openMessageDialog).
+// Note that the idea behind UIUtil.java was to require
+// all UI to go through there, and it enforced UI restraints
+// to assure the tool could run headless.
 public class ScrolledTextDialog extends Dialog {
 
 	private String title;

@@ -217,12 +217,15 @@ public abstract class PasteAction extends CutCopyPasteAction  {
 						.getActiveWorkbenchWindow().getShell();
 				Image image = PlatformUI.getWorkbench().getDisplay()
 						.getSystemImage(SWT.ICON_WARNING);
-				boolean proceed = UIUtil.openMessageDialog(shell,
+				int selectionMade = UIUtil.openScrollableMessageDialogWithPrintOption(shell,
 						"Problems during paste", image, messageText,
 						UIUtil.BPMessageTypes.WARNING,
-						new String[] { "Proceed", "Undo" }, 0);
+						new String[] { "Proceed", "Undo", "Print" }, 0);
 				Transaction revertTransaction = null;
-				if (!proceed) {
+				// the selectionMade is a 0-based index of the option list, and
+				// the "Print" option is handled internally by the dialog, so the
+				// actual returned value will be 0 (Proceed) or 1 (Undo) in this case
+				if (selectionMade==1) {
 					revertTransaction = manager.revertTransaction(transaction,
 							false, false, monitor);
 					manager.removeTransactionFromStack(revertTransaction,

@@ -47,7 +47,14 @@ import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.printing.PrintDialog;
+import org.eclipse.swt.printing.Printer;
+import org.eclipse.swt.printing.PrinterData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -366,7 +373,8 @@ public class UIUtil
 		if (CoreUtil.IsRunningHeadless) {
 			outputTextForheadlessRun(BPMessageTypes.QUESTION, title, message, String.valueOf(defaultReturn));
 		} else {
-    		ScrolledTextDialog dialog = new ScrolledTextDialog(parentShell, allowCancel, title, textContents, message, optionalText, preferenceKey);
+			ScrolledTextDialog dialog = new ScrolledTextDialog(parentShell, allowCancel, title, textContents, message,
+					optionalText, preferenceKey);
     		int result = dialog.open();
     		if(result == Window.OK) {
     			return true;
@@ -471,8 +479,8 @@ public class UIUtil
      * Note this "MessageDialog" currently only supports an array of 2 dialog button
      * labels.   This is why the result is a boolean.  It simply behaves in
      * a similar manner as if a yes/no question had been asked (offset 0 is
-     * yes and offset 1 is no).   If additional buttons are ever needed this
-     * will need to be modified to handle it.
+     * yes and offset 1 is no).   If additional buttons are needed use 
+     * openMessageDialogWithPrintOption instead.
      */
 	public static boolean openMessageDialog(Shell parentShell, String dialogTitle,
 			Image dialogTitleImage, String dialogMessage, BPMessageTypes dialogType,
@@ -496,7 +504,245 @@ public class UIUtil
 		} 
 		return result;
     }
-     
+
+	// TODO FIXME: What I did below here was done before
+	// I saw ScrolledTextDialog. We should use 
+	// ScrolledTextDialog, not MessageBox
+ 	/**
+	 * This displayS a MessageDialog to the user. If the caller 
+	 * specifies one of the dialogButtonLabels as "Print", and the
+	 * user select that one, this routine presents a print dialog to 
+	 * the user allowing them to print the file. Note that the user
+	 * can of course print to a file, thus save the contents rather than
+	 * sending them to an actual printer.
+	 * 
+	 * @param parentShell @see openMessageDialog
+	 * @param dialogTitle @see openMessageDialog
+	 * @param dialogTitleImage @see openMessageDialog
+	 * @param dialogMessage @see openMessageDialog
+	 * @param dialogType @see openMessageDialog
+	 * @param dialogButtonLabels @see openMessageDialog
+	 * @param defaultIndex @see openMessageDialog
+	 * 
+	 * @return This returns the index of the selection made by the user.
+	 */
+	public static int openScrollableMessageDialogWithPrintOption(Shell parentShell, String dialogTitle,
+			Image dialogTitleImage, String dialogMessage, BPMessageTypes dialogType,
+			String[] dialogButtonLabels, int defaultIndex) {
+		int standardDialogType = MessageDialog.WARNING;
+		if (dialogType == BPMessageTypes.ERROR) {
+			standardDialogType = MessageDialog.ERROR;
+		} else if ((dialogType == BPMessageTypes.INFORMATION)) {
+			standardDialogType = MessageDialog.INFORMATION;
+		}
+		int  result = defaultIndex;
+		int printOptionIndex = -1;
+		for (int i = 0; i < dialogButtonLabels.length; i++) {
+			if (dialogButtonLabels[i].equalsIgnoreCase("Print")) {
+				printOptionIndex = i;
+				break;
+			}
+		}
+		if (CoreUtil.IsRunningHeadless) {
+			outputTextForheadlessRun(dialogType, dialogTitle, dialogMessage, "");
+		} else {
+			boolean userMadeTheirSelection =false;
+			while (!userMadeTheirSelection) {
+				MessageDialog dialog = new MessageDialog(parentShell, dialogTitle,
+					dialogTitleImage, dialogMessage, standardDialogType,
+					dialogButtonLabels, defaultIndex);
+				dialog.setBlockOnOpen(true);
+				result = dialog.open();	
+				if (printOptionIndex > -1 && printOptionIndex==result) {
+					openPrintDialog(parentShell, dialogTitle, dialogMessage);
+				} else {
+					userMadeTheirSelection = true;
+				}
+			}
+		} 
+		return result;
+    }
+
+	/**
+	 * 
+	 * @param parentShell
+	 * @param jobName The print job name
+	 * @param printBuffer The buffer to be printed
+	 */
+	public static void openPrintDialog(Shell parentShell, String jobName, String printBuffer) {
+		PrintDialog dialog = new PrintDialog(parentShell, SWT.NONE);
+	    PrinterData data = dialog.open();
+	    if (data == null) {
+	        return;
+	    }
+	    if (data.printToFile) {
+	    	 // TODO ask the user for a filename 
+	        data.fileName = "print.out";
+	    }
+
+	    Printer printer = new Printer(data);
+		try {
+			// Print the contents of the file
+			new UIUtil.WrappingPrinter(printer, jobName, printBuffer).print();
+		} catch (Exception e) {
+			UIUtil.displayError(e.getMessage());
+		} finally {
+			printer.dispose();
+		}	    		
+	}
+
+	/**
+	 * This class performs the printing, wrapping text as necessary
+	 */
+	private static class WrappingPrinter {
+		private Printer printer; // The printer
+		private String jobname; // The name of the print job
+		private String contents; // The contents of the file/buffer to print
+		private GC gc; // The GC to print on
+		private int xPos, yPos; // The current x and y locations for print
+		private Rectangle bounds; // The boundaries for the print
+		private StringBuffer buf; // Holds a word at a time
+		private int lineHeight; // The height of a line of text
+
+		/**
+		 * WrappingPrinter constructor
+		 * 
+		 * @param printer
+		 *            the printer
+		 * @param fileName
+		 *            the fileName
+		 * @param contents
+		 *            the contents
+		 */
+		public WrappingPrinter(Printer printer, String jobname, String contents) {
+			this.printer = printer;
+			this.jobname = jobname;
+			this.contents = contents;
+		}
+
+		/**
+		 * Prints the file
+		 */
+		void print() {
+			// Start the print job
+			if (printer.startJob(jobname)) {
+				// Determine print area, with margins
+				bounds = computePrintArea(printer);
+				xPos = bounds.x;
+				yPos = bounds.y;
+
+				// Create the GC
+				gc = new GC(printer);
+
+				// Determine line height
+				lineHeight = gc.getFontMetrics().getHeight();
+
+				// Determine tab width--use three spaces for tabs
+				int tabWidth = gc.stringExtent("   ").x;
+
+				// Print the text
+				printer.startPage();
+				buf = new StringBuffer();
+				char c;
+				for (int i = 0, n = contents.length(); i < n; i++) {
+					// Get the next character
+					c = contents.charAt(i);
+
+					// Check for newline
+					if (c == '\n') {
+						printBuffer();
+						printNewline();
+					}
+					// Check for tab
+					else if (c == '\t') {
+						xPos += tabWidth;
+					} else {
+						buf.append(c);
+						// Check for space
+						if (Character.isWhitespace(c)) {
+							printBuffer();
+						}
+					}
+				}
+				printer.endPage();
+				printer.endJob();
+				gc.dispose();
+			}
+		}
+
+		/**
+		 * Prints the contents of the buffer
+		 */
+		void printBuffer() {
+			// Get the width of the rendered buffer
+			int width = gc.stringExtent(buf.toString()).x;
+
+			// Determine if it fits
+			if (xPos + width > bounds.x + bounds.width) {
+				// Doesn't fit--wrap
+				printNewline();
+			}
+
+			// Print the buffer
+			gc.drawString(buf.toString(), xPos, yPos, false);
+			xPos += width;
+			buf.setLength(0);
+		}
+
+		/**
+		 * Prints a newline
+		 */
+		void printNewline() {
+			// Reset x and y locations to next line
+			xPos = bounds.x;
+			yPos += lineHeight;
+
+			// Have we gone to the next page?
+			if (yPos > bounds.y + bounds.height) {
+				yPos = bounds.y;
+				printer.endPage();
+				printer.startPage();
+			}
+		}
+
+		/**
+		 * Computes the print area, including margins
+		 * 
+		 * @param printer
+		 *            the printer
+		 * @return Rectangle
+		 */
+		Rectangle computePrintArea(Printer printer) {
+			// Get the printable area
+			Rectangle rect = printer.getClientArea();
+
+			// Compute the trim
+			Rectangle trim = printer.computeTrim(0, 0, 0, 0);
+
+			// Get the printer's DPI
+			Point dpi = printer.getDPI();
+
+			// Calculate the printable area, using 1 inch margins
+			int left = trim.x + dpi.x;
+			if (left < rect.x)
+				left = rect.x;
+
+			int right = (rect.width + trim.x + trim.width) - dpi.x;
+			if (right > rect.width)
+				right = rect.width;
+
+			int top = trim.y + dpi.y;
+			if (top < rect.y)
+				top = rect.y;
+
+			int bottom = (rect.height + trim.y + trim.height) - dpi.y;
+			if (bottom > rect.height)
+				bottom = rect.height;
+
+			return new Rectangle(left, top, right - left, bottom - top);
+		}
+	}
+
     private static class BPMessageDialog implements Runnable {
     	Shell m_parent;
     	final String m_title;
