@@ -980,12 +980,16 @@ public class TransactionManager {
 
 	public static void reportElementDowngraded(Object p_rgodowngraded, Object p_rto, String p_relationship) {
 		if (p_rgodowngraded != null) {	
-			String qualifedName = "";
+			String rgoQualifedName = "<null "+p_relationship+">";
 			if (p_rgodowngraded != null) {
-				qualifedName = ((NonRootModelElement)p_rgodowngraded).getPath();
+				rgoQualifedName = ((NonRootModelElement)p_rgodowngraded).getPath();
 			}
-			if (!qualifedName.isEmpty() && !affectedModelElementsNames.contains(qualifedName)) {
-				String message = ((NonRootModelElement)p_rto).getPath() + "  is associated with  " + qualifedName;
+			if (!affectedModelElementsNames.contains(rgoQualifedName)) {
+				String rtoQualifedName = "<null "+p_relationship+">";
+				if (p_rto != null) {
+					rtoQualifedName = ((NonRootModelElement)p_rto).getPath();
+				}
+				String message =  rtoQualifedName + "  is associated with  " + rgoQualifedName;
 				affectedModelElementsNames.add(message); 
 			}
 		}
