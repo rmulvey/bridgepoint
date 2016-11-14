@@ -18,6 +18,8 @@ This note shall describe the approach that shall be taken to introduce undo for 
 <a id="2.2"></a>2.2 [8321 Model Element Move Design Note](../8321_Model_Element_Move.dnt.md)  
 <a id="2.3"></a>2.3 [8321 Model Element Move Implementation Note](../8321_Model_Element_Move.int.md)  
 <a id="2.4"></a>2.4 [MEM Manual Test Procedure](https://support.onefact.net/issues/8837)  
+<a id="2.5"></a>2.5 [Provide Undo, Redo and Revert functionality](https://github.com/xtuml/internal/blob/71c842bdcd937f946f977d529dc90e0f9a5f2486/Documentation_archive/20090903/technical/Undo_Redo_Revert/undo_redo_revert-i473.ant)  
+<a id="2.6"></a>2.6 [Batch Event Delivery Mechanism](https://github.com/xtuml/internal/blob/71c842bdcd937f946f977d529dc90e0f9a5f2486/Documentation_archive/20090903/technical/Architecture/i865.dnt)  
 
 3. Background
 -------------
