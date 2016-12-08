@@ -146,6 +146,10 @@ public abstract class CoreExport implements IRunnableWithProgress {
     	return m_exportOAL;
     }
     
+    public boolean exportOnlyOAL() {
+    	return m_exportOnlyOAL;
+    }
+    
     public boolean exportGraphics() {
     	return m_exportGraphics;
     }
