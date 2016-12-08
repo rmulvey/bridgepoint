@@ -695,6 +695,10 @@ throws IOException
   if (!exportOAL()) {
     return;
   }
+      .else
+  if (exportOnlyOAL()) {
+    return;
+  }
       .end if
       .if(not multilevel) .// since we have already taken care of header in run method incase of multilevel export.
         .if ( parent_name == domain_class_name )

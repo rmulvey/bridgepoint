@@ -42,6 +42,7 @@ import org.xtuml.bp.ui.text.activity.AllActivityModifier;
 public abstract class CoreExport implements IRunnableWithProgress {
     protected Ooaofooa m_modelRoot = null;
     private boolean m_exportOAL = false;
+    private boolean m_exportOnlyOAL = false;    
     private boolean m_exportGraphics = true;
 	private boolean errorLoggedDuringParse = false;
 	public boolean outputCachedIDs = false;
@@ -103,6 +104,20 @@ public abstract class CoreExport implements IRunnableWithProgress {
         	m_exportOAL = false;
     	}
     	return m_exportOAL;
+    }
+
+    /**
+     * Set the flag that indicates if we should export ONLY OAL or not.
+     * 
+     * @param exportOnlyOAL When this is true we will also set the m_exportOAL flag to 
+     * true. The effect is that we only export OAL instances and nothing else.
+     *                  
+     */
+    public void setExportOnlyOAL(boolean exportOnlyOAL) {
+    	m_exportOnlyOAL = exportOnlyOAL;
+    	if (m_exportOnlyOAL) {
+    		m_exportOAL = true;
+    	}
     }
     
     /**
