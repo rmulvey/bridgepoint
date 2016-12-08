@@ -93,6 +93,19 @@
          </action>
       </objectContribution>
       
+      <objectContribution
+            adaptable="true"
+            id="org.xtuml.bp.utilities.ExportOALInstancesContribution"
+            objectClass="org.xtuml.bp.core.common.NonRootModelElement">
+         <action
+               class="org.xtuml.bp.utilities.actions.ExportOALInstances"
+               enablesFor="+"
+               id="org.xtuml.bp.utilities.ExportOALInstances"
+               label="Export OAL Instances to the Clipboard"
+               menubarPath="org.xtuml.bp.utilities/org.xtuml.bp.utilities.separator">
+         </action>
+      </objectContribution>
+      
    </extension>
    
    <extension
