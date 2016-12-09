@@ -32,46 +32,33 @@ public class ExportOALInstances implements IActionDelegate {
 			NonRootModelElement nrme = ((NonRootModelElement) i.next());
 			elementsToExport.add(nrme);
 		}
-		
-		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-		CoreExport exporter = (CoreExport) org.xtuml.bp.core.CorePlugin
-				.getStreamExportFactory().create(
-						outStream,
-						elementsToExport
-								.toArray(new NonRootModelElement[elementsToExport
-										.size()]), true, true);
 
+		ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		try {
+			CoreExport exporter = (CoreExport) org.xtuml.bp.core.CorePlugin.getStreamExportFactory().create(outStream,
+					elementsToExport.toArray(new NonRootModelElement[elementsToExport.size()]), true, true);
+	
 			exporter.setExportOAL(CoreExport.YES);
 			exporter.setExportGraphics(CoreExport.NO);
 			exporter.setExportOnlyOAL(true);
-
-//				// Perform a parse-all to assure the model is up to date
-//				exporter.parseAllForExport(elementsToExport
-//						.toArray(new NonRootModelElement[elementsToExport.size()]),
-//						monitor);
-
-			try {
-				exporter.run(new NullProgressMonitor());
-			} catch (InvocationTargetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			Clipboard cb = CorePlugin.getSystemClipboard();
-			cb.clearContents();
-			try {
-				outStream.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			String streamContents = new String(outStream.toByteArray());
-			streamContents = streamContents.replaceFirst("\n", "\n" + CopyCutAction.GENERIC_PACKAGE_HEADER + "\n");
-			cb.setContents(new Object[] { streamContents },
-					new Transfer[] { TextTransfer.getInstance() });
+	
+			// // Perform a parse-all to assure the model is up to date
+			// exporter.parseAllForExport(elementsToExport.toArray(new
+			// NonRootModelElement[elementsToExport.size()]), monitor);
+	
+			exporter.run(new NullProgressMonitor());
+	
+			outStream.close();
+		} catch (Exception e) {
+			CorePlugin.logError("Failed to run the OAL instance export.", e);
+			return;
+		}
+		// now format the result for export and put it on the clipboard.
+		String streamContents = new String(outStream.toByteArray());
+		streamContents = streamContents.replaceFirst("\n", "\n" + CopyCutAction.GENERIC_PACKAGE_HEADER + "\n");
+		Clipboard cb = CorePlugin.getSystemClipboard();
+		cb.clearContents();
+		cb.setContents(new Object[] { streamContents }, new Transfer[] { TextTransfer.getInstance() });
 	}
 
 	@Override
