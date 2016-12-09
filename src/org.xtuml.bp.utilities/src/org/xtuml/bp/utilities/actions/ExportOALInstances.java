@@ -42,9 +42,9 @@ public class ExportOALInstances implements IActionDelegate {
 			exporter.setExportGraphics(CoreExport.NO);
 			exporter.setExportOnlyOAL(true);
 	
-			// // Perform a parse-all to assure the model is up to date
-			// exporter.parseAllForExport(elementsToExport.toArray(new
-			// NonRootModelElement[elementsToExport.size()]), monitor);
+			 // Perform a parse-all to assure the model is up to date
+			 exporter.parseAllForExport(elementsToExport.toArray(new
+			 NonRootModelElement[elementsToExport.size()]), new NullProgressMonitor());
 	
 			exporter.run(new NullProgressMonitor());
 	

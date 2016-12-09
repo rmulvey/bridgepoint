@@ -292,10 +292,12 @@ throws IOException
 .// Support the ability to export only OAL instances by
 .// generating a call to look at the export_only_OAL attribute in
 .// the operations that are NOT oal instances.
-.if ((not_empty eo) and (not eo.isOAL))
+.if (not_empty eo )
+  .if (not eo.isOAL)
 if (exportOnlyOAL()) {
   return;
 }
+  .end if
 .end if
 if(inst != null && !inst.isProxy()){
   .if ((multilevel) and (not stream))
@@ -319,6 +321,18 @@ ${attrs.body}\
 public void write_${r.body}_proxy_sql(${r.body} inst)
 throws IOException
 {
+
+.select one eo related by table->EI[R4]->EO[R3]
+.// Support the ability to export only OAL instances by
+.// generating a call to look at the export_only_OAL attribute in
+.// the operations that are NOT oal instances.
+.if (not_empty eo )
+  .if (not eo.isOAL)
+if (exportOnlyOAL()) {
+  return;
+}
+  .end if
+.end if
     .if(stream)
   if ( inst != null && !writtenProxies.contains(inst) && !writtenInstances.contains(inst))
     .else
