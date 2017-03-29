@@ -25,6 +25,7 @@
     * [How do I turn on Tracing/Debugging statements in BridgePoint](#tracing)
     * [Command Line Build Instructions](#clibuild)
     * [How do BridgePoint Context Menu Entries (CMEs) work?](#bp_cme)
+    * [How to generate code for a specific class without waiting for a full build](#fast_build1)
   * [Verifier](#verifier)
     * [What does "Nothing to verify." mean?](#nothingtoverify) 
   * [Model Translation / Model Compilers](#mcs)
@@ -40,6 +41,7 @@
     * [How does the model of persistence work?](#persistence)
     * [How are ModelElements organized in memory?](#inmemory_arch)
     * [How can I examine the BridgePoint in-memory Instance Population? (Instance Population Monitor)](#instanceviewer)
+    * [What is the ComponentTransactionListener and how does it work?](#transactionlistener)  
   * [Miscellaneous](#misc)
     * [How do I append updates to BridgePoint issues via e-mail?](#emailissueupdates)   
     * [Is the xtUML.org ID connected to Redmine in any way?](#connectedids)  
@@ -236,7 +238,18 @@ BridgePoint Developer Issues <a id="bpdevelopers"></a>
   - Classes in bridgepoint that use CME have a operation named actionFilter. For example, class Model Class (O_OBJ) has this.
   - The actionFilter operation has OAL that acts as a filter to determine when to enable/disable the CME
   - There are exceptions to the above description. However, in general that is how it works.
-
+  
+* **How to generate code for a specific class without waiting for a full build** <a id="fast_build1"></a>
+  - Edit bp.core/generate.properties 
+    - To build a single class only:
+      - Put the containing package name on the ptc_mcc_ss_only line (property).  
+      - Put the name of the class on the ptc_mcc_class_only line (property).
+  - For example:  
+  ```
+  ptc_mcc_ss_only=Subsystem
+  ptc_mcc_class_only=Model Class
+  ```
+  
 BridgePoint Architecture <a id="bparchitecture"></a>
 ------------
 * **The following diagram is a simplified java class diagram that shows the 
@@ -364,6 +377,12 @@ BridgePoint Architecture <a id="bparchitecture"></a>
         - Parser NonRootModelElements
         - Runtime NonRootModelElements
   - ![bpinstanceviewer.png](bpinstanceviewer.png) 
+
+* **What is the ComponentTransactionListener and how does it work?** <a id="transactionlistener"></a>  
+  A brief explanation of the transaction listener can be found in this note:
+  [8261_masl_refactor_dnt.md](../notes/8261_masl_refactor/8261_masl_refactor_dnt.md).
+  The whole note contains good and relevant information, but section 7 focuses
+  on the transaction listener.
   
 Verifer <a id="verifier"></a>
 ------------
