@@ -97,7 +97,9 @@ interface named "Startup". Note that this interface is defined in Startup::Start
 
 5.1.5.2 Note that I can run BP6.2.0 and 6.4 at the same time against the same 
 git model and 6.2 looks good while 6.4 has the problem. This is EVEN in the case 
-AFTER I have performed the load and persist in 6.2.  
+AFTER I have performed the load and persist in 6.2.  Note that "looks good" means: 
+"there is no ‘no smoking’ sign on the model anywhere (ports are syncronized), 
+no parse errors, and the port operatations are displayed as they should be"  
   
 *This implies this is a model load problem not related to model update*
 
