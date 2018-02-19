@@ -28,8 +28,7 @@ model, enum4, from the xtuml/models test repository was modified to reproducd th
 <a id="2.5"></a>2.5 [Analysis for xtUML Revised Type System](
 https://github.com/xtuml/bridgepoint/blob/1c1fc116e770f70a44aac7e73e0bcc2de00c66c6/doc-bridgepoint/notes/9416_type_system/9416_type_system_ant.md) This is an analysis that speaks to recent discussion about type system improvements.  
 <a id="2.6"></a>2.6 [BridgePoint DEI #8061 Implementation note](https://github.com/xtuml/bridgepoint/blob/e47b13b9cb1004459f586b5bb1eb174df33b168f/doc-bridgepoint/notes/8061_ipr_classes.md) Allow Imported Classes via IPR (Phase 1)  
-
-
+<a id="2.7"></a>2.7 [Constant group item visibility - engineering notes](../9566_constants) This project modified the oal.bnf to introduce scoping of constants.  
 
 ### 3. Background
 
@@ -55,7 +54,7 @@ The OAL parser reports a duplicate in situations where the user would prefer tha
 
 ## 4. Requirements
 
-The requirements are sourced from [[2.4]](#2.4).  
+The requirements are sourced from [[2.2]](#2.2).  
 
 4.1 A BridgePoint model shall allow duplicate-named enumeration data types to exist in separate packages in a model.  
 4.2 A BridgePoint model shall allow duplicate-named constant data types to exist in separate packages in a model.  
@@ -78,6 +77,9 @@ Since the observation called out in [[2.3] Comment 1](https://support.onefact.ne
 Recent discussion of possible type system improvements led to analysis that speaks to possible updates in ooaofooa::Functions::OAL Validation Utility Functions::data_types_compatible() [[2.5]](#2.5). Changes to rules around 
 scoping of datatypes is a likely part of this work.
 
+5.1.4 [Constant group item visibility](#2.7)  
+Work was performed during the v6.6 release cycle to introduce scoped constants. Before this work, the problem of duplicates in constants was even worse because all the constant members were in the same namespace, therefore it was very easy to have duplicate constant member names. This change modfiied the oal.bnf grammer and modified what was the enumerator_access rule, and renamed it to scoped_access. It then changed the grammer, and the OAL so that constants and enumerators follow the same rule.  
+
 5.2 Current BridgePoint Search (parser name-based resolution)  
 The parser name resolition used by BridgePoint is partially modeled. It is modeled in ooaofooa::Packageable Element (PE_PE), and the relevant snippets of this diagram are included below:
 
@@ -89,19 +91,19 @@ An operation, PE_PE::collectVisibleElementsForName, serves as the entry-point fo
 
 5.3 Options  
 5.3.1 Introduce an "path-spec" to the OAL grammar  
-A full-qualifed path to the referenced data-type could be included by the user in OAL to specify which data-type they wisj to refer to. It is observed that the "data-type chooser" does this when allowing the user to select a "user data type" to assign to an element.  OAL grammer could be modifed to intriduce such a path that could be specified in the grammar.  
+A full-qualifed path to the referenced data-type could be included by the user in OAL to specify which data-type they wish to refer to. It is observed that the "data-type chooser" does this when allowing the user to select a "user data type" to assign to an element.  OAL grammer could be modifed to intriduce such a path that could be specified in the grammar.  
+
+Such a path should consider that duplicates may exist outside the current model when inter-project references are enabled, and must account for this.
 
 5.3.2 Use the "closest" match  
 Modify PE_PE::collectVisibleElementsForName and introduce a "search depth". Since PE_PE::collectVisibleElementsForName is essentially a recursive-decent search, this "search depth" would allow the parser to know which duplicate name (if there was a duplicate) is the "closest" in scope to the OAL Action body. In the case of a duplicate name, the "closest to the action body" when searching "out" would be used. If the search resulted in multiple matches with an equal "search depth" then it would still be considered a duplicate.  
 
 5.4 Design Choice  
-The "closest match" [5.3.2] is the choice selected. While enhancing the OAL grammer for scoping may be something done in the
-future [2.5](#2.5), it is not necessary for this task.  
+The "closest match" [5.3.2] is the simpliest option. However, with this option the user is NOT allowed to select a type when there are duplicates, instead the user is forced to use the "closest". Of course in the situation where there are duplicates at the "same level" in this approach, the duplicate error would remain. The fact that the user is not allowed to specify which visibile data type to use when there are duplicates does not satisfy requirement [3], and therefore this option shall not be used. Option [5.3.1], introducing a path-spec to the OAL grammar shall be used.  
 
 
 ### 6. Design
 
-This shall be done in the implementation note that follows.    
 
 ### 7. Design Comments
 
