@@ -1936,7 +1936,8 @@ if self == originatingComponent
     element.collectVisibleElementsForName(name:param.name, type:param.type,
          descending:true, originatingContainerID: param.originatingContainerID,
                                    delegatingPkgID:param.delegatingContainerID,
-                                         collectGlobally:param.collectGlobally);
+                                         collectGlobally:param.collectGlobally, 
+                                         distance:param.distance);
   end for;
 else // not originating Component
   // Visit all child elements
@@ -1946,7 +1947,8 @@ else // not originating Component
       element.collectVisibleElementsForName(name:param.name, type:param.type,
          descending:true, originatingContainerID: param.originatingContainerID,
                                    delegatingPkgID:param.delegatingContainerID,
-                                         collectGlobally:param.collectGlobally);
+                                         collectGlobally:param.collectGlobally,
+                                         distance:param.distance);
     end if;
   end for;
 end if;
@@ -1957,7 +1959,8 @@ for each element in elements
       element.collectVisibleElementsForName(name:param.name, type:param.type,
          descending:true, originatingContainerID: param.originatingContainerID,
                                    delegatingPkgID:param.delegatingContainerID,
-                                         collectGlobally:param.collectGlobally);
+                                         collectGlobally:param.collectGlobally,
+                                         distance:param.distance);
   end if;
 end for;
 // We now ascend the hierarchy. Note that components are never
@@ -1973,14 +1976,16 @@ if ( (not PREF::getBoolean(name:"bridgepoint_prefs_opaque_components")) or (para
 		  type:param.type, descending:false,
 						originatingContainerID: param.originatingContainerID,
 											delegatingPkgID:GD::NULL_UNIQUE_ID(),
-										   collectGlobally:param.collectGlobally);
+										   collectGlobally:param.collectGlobally,
+										   distance:param.distance);
   else
 	select one parentComponent related by self->PE_PE[R8001]->C_C[R8003];
 	if not_empty parentComponent
 	  parentComponent.collectVisibleElementsForName(name:param.name,
 		  type:param.type, originatingContainerID: param.originatingContainerID,
 									  delegatingContainerID:GD::NULL_UNIQUE_ID(),
-										   collectGlobally:param.collectGlobally);
+										   collectGlobally:param.collectGlobally,
+										   distance:param.distance);
 	end if;
   end if;
 // if we are not ascending the hierarchy, we must collect the globals manually
@@ -1992,7 +1997,8 @@ else
                                              descending: false,
                         originatingContainerID:param.originatingContainerID,
                                   delegatingPkgID:param.delegatingContainerID,
-                                                         collectGlobally:false);
+                                                         collectGlobally:false,
+                                                         distance:param.distance);
   end for;
 end if;',
 	1,
@@ -2050,6 +2056,15 @@ INSERT INTO O_TPARM
 	0,
 	'',
 	"bfa7f86c-a609-497e-8342-7bb79bbb8499",
+	'');
+INSERT INTO O_TPARM
+	VALUES ("b592588f-f7d6-4db2-b9a2-53d80ff378ce",
+	"c7358101-9c93-4661-8033-92ba32c2a28f",
+	'distance',
+	"ba5eda7a-def5-0000-0000-000000000002",
+	0,
+	'',
+	"ff687de4-c40a-400f-a440-ab1f08fa93b7",
 	'');
 INSERT INTO O_TFR
 	VALUES ("aa0aa30d-8f86-403c-933b-5f08e39a0eea",

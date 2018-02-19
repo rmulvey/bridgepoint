@@ -209,7 +209,8 @@ for each pkg in pkgs
                     descending: true,
                         originatingContainerID: param.originatingContainerID,
                                           delegatingPkgID:GD::NULL_UNIQUE_ID(),
-                                                         collectGlobally:false);
+                                                         collectGlobally:false,
+                                                         distance:param.distance);
     end if;
   end if;
 end for;
@@ -224,7 +225,8 @@ if not param.descending and self.useGlobals
                                              descending: param.descending,
                         originatingContainerID:param.originatingContainerID,
                                   delegatingPkgID:param.delegatingContainerID,
-                                                         collectGlobally:false);
+                                                         collectGlobally:false,
+                                                         distance:param.distance);
   end for;
 end if;
 if param.type == ElementTypeConstants::PACKAGE
@@ -256,7 +258,8 @@ if param.descending == false and param.collectGlobally and
       system.collectVisibleElementsForName(name:param.name, descending: true,
         type:param.type, originatingContainerID: param.originatingContainerID,
                                     delegatingContainerID:GD::NULL_UNIQUE_ID(),
-                                                         collectGlobally:false);
+                                                         collectGlobally:false, 
+                                                         distance:param.distance); 
     end if;
   end for;
 end if;
@@ -325,6 +328,15 @@ INSERT INTO O_TPARM
 	0,
 	'',
 	"ecaafb4d-1480-455a-9eaf-1b41de913c35",
+	'');
+INSERT INTO O_TPARM
+	VALUES ("35ec1b59-30a1-45cc-a182-1b5aa1e8fe70",
+	"e2c6428d-7d15-43f9-b824-8f3cb4606493",
+	'distance',
+	"ba5eda7a-def5-0000-0000-000000000002",
+	0,
+	'',
+	"ad2f6349-b2c6-454d-a605-168b9339a757",
 	'');
 INSERT INTO O_TFR
 	VALUES ("8a249d0d-64d8-4b03-bd4b-92d4e39587b4",

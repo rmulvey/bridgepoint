@@ -164,166 +164,6 @@ delete object instance self;',
 	"00000000-0000-0000-0000-000000000000",
 	0);
 INSERT INTO O_TFR
-	VALUES ("69115024-26db-4ec7-a090-987abb80ca2a",
-	"5ada8d43-9e86-43cb-91a2-fac19a8e30f6",
-	'collectVisibleElementsForName',
-	'',
-	"ba5eda7a-def5-0000-0000-000000000000",
-	1,
-	'// Packageable Element::collectVisibleElementsForName()
-if param.type == self.type
-  visible = false;
-  if param.type == ElementTypeConstants::DATATYPE
-    select one dt related by self->S_DT[R8001];
-    if not_empty dt and (param.name == "" or dt.Name == param.name)
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::CONSTANT
-    select one cnst related by self->CNST_CSP[R8001];
-    if not_empty cnst
-      visible = true;
-    end if;    
-  elif param.type == ElementTypeConstants::CLASS
-    select one clazz related by self->O_OBJ[R8001];
-    if not_empty clazz and (param.name == "" or clazz.Key_Lett == param.name)
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::INTERFACE
-    select one ifc related by self->C_I[R8001];
-    if not_empty ifc and (param.name == "" or ifc.Name == param.name)
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::FUNCTION
-    select one fn related by self->S_SYNC[R8001];
-    if not_empty fn and (param.name == "" or fn.Name == param.name)
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::COMPONENT
-    select one comp related by self->C_C[R8001];
-    if not_empty comp and (param.name == "" or comp.Name == param.name)
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::EE
-    select one ee related by self->S_EE[R8001];
-    if not_empty ee and (param.name == "" or ee.Key_Lett == param.name)
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::ASSOCIATION
-    select one rel related by self->R_REL[R8001];
-    if not_empty rel and (param.name == "" or
-                   rel.Numb == OS::convert_relationship_string(rel:param.name));
-      visible = true;
-    end if;
-  elif param.type == ElementTypeConstants::PACKAGE
-    select one package related by self->EP_PKG[R8001];
-    if not_empty package and (param.name == "" or package.Name == param.name)
-      visible = true;
-    end if;
-  end if;
-  if visible
-    select any package from instances of EP_PKG
-                    where (selected.Package_ID == param.originatingContainerID);
-    select one packageableElement related by package->PE_PE[R8001];
-    if(empty package)
-      // force the architecture to look globally for the package
-      select any packageableElement from instances of PE_PE
-                    where (selected.Element_ID == param.originatingContainerID);
-      select one package related by packageableElement->EP_PKG[R8001];
-    end if;
-    if not_empty package
-      select any resultSet related by package->PE_SRS[R8005] where
-                    selected.Name == param.name and selected.Type == param.type;
-      create object instance visibility of PE_VIS;
-      relate self to package across R8002 using visibility;
-      relate visibility to resultSet across R8006;
-    else
-      select one originatingComp related by packageableElement->C_C[R8001];
-      if not_empty originatingComp
-        select any resultSet related by originatingComp->PE_CRS[R8007] where
-                    selected.Name == param.name and selected.Type == param.type;
-        create object instance visibility of PE_CVS;
-        relate self to originatingComp across R8004 using visibility;
-        relate visibility to resultSet across R8008;
-      end if;
-    end if;
-  end if;
-end if;
-if self.type == ElementTypeConstants::PACKAGE
-  select one package related by self->EP_PKG[R8001];
-  if not_empty package and self.Element_ID != param.delegatingPkgID
-    package.collectVisibleElementsForName(name:param.name,
-                         type:param.type, descending:param.descending,
-                         originatingContainerID: param.originatingContainerID,
-                                         delegatingPkgID:GD::NULL_UNIQUE_ID(),
-                                         collectGlobally:param.collectGlobally);
-  end if;
-end if;',
-	1,
-	'',
-	"d7f10c92-2026-4f6c-ad30-77958a473334",
-	0);
-INSERT INTO O_TPARM
-	VALUES ("00dac2a1-caf9-4d41-8c24-494fd0168d84",
-	"69115024-26db-4ec7-a090-987abb80ca2a",
-	'name',
-	"ba5eda7a-def5-0000-0000-000000000004",
-	0,
-	'',
-	"00000000-0000-0000-0000-000000000000",
-	'');
-INSERT INTO O_TPARM
-	VALUES ("fb1143e1-1a34-49d9-ae1d-8118c7233232",
-	"69115024-26db-4ec7-a090-987abb80ca2a",
-	'type',
-	"9a52ac80-0dbf-4444-99ce-efd27902d8db",
-	0,
-	'',
-	"00dac2a1-caf9-4d41-8c24-494fd0168d84",
-	'');
-INSERT INTO S_DT_PROXY
-	VALUES ("9a52ac80-0dbf-4444-99ce-efd27902d8db",
-	"00000000-0000-0000-0000-000000000000",
-	'ElementTypeConstants',
-	'',
-	'',
-	'../../Datatypes/Datatypes.xtuml');
-INSERT INTO O_TPARM
-	VALUES ("bfe501b6-a745-4989-bd27-cc95707dc2b9",
-	"69115024-26db-4ec7-a090-987abb80ca2a",
-	'descending',
-	"ba5eda7a-def5-0000-0000-000000000001",
-	0,
-	'',
-	"fb1143e1-1a34-49d9-ae1d-8118c7233232",
-	'');
-INSERT INTO O_TPARM
-	VALUES ("56c02c8a-6617-4f30-8cc2-e5b35679f7d7",
-	"69115024-26db-4ec7-a090-987abb80ca2a",
-	'originatingContainerID',
-	"ba5eda7a-def5-0000-0000-000000000005",
-	0,
-	'',
-	"bfe501b6-a745-4989-bd27-cc95707dc2b9",
-	'');
-INSERT INTO O_TPARM
-	VALUES ("2073e72c-37a4-46c7-9ffc-80d4395ce4b1",
-	"69115024-26db-4ec7-a090-987abb80ca2a",
-	'delegatingPkgID',
-	"ba5eda7a-def5-0000-0000-000000000005",
-	0,
-	'',
-	"56c02c8a-6617-4f30-8cc2-e5b35679f7d7",
-	'');
-INSERT INTO O_TPARM
-	VALUES ("46c74672-9e77-4e33-8bc1-40ab54362659",
-	"69115024-26db-4ec7-a090-987abb80ca2a",
-	'collectGlobally',
-	"ba5eda7a-def5-0000-0000-000000000001",
-	0,
-	'',
-	"2073e72c-37a4-46c7-9ffc-80d4395ce4b1",
-	'');
-INSERT INTO O_TFR
 	VALUES ("48405ea7-e3a7-457c-abef-a418bed792e4",
 	"5ada8d43-9e86-43cb-91a2-fac19a8e30f6",
 	'initialize',
@@ -334,7 +174,7 @@ INSERT INTO O_TFR
 self.Visibility = Visibility::Public;',
 	1,
 	'',
-	"69115024-26db-4ec7-a090-987abb80ca2a",
+	"d7f10c92-2026-4f6c-ad30-77958a473334",
 	0);
 INSERT INTO O_TFR
 	VALUES ("dc5721d8-8df7-447e-9506-ae986463cffa",
@@ -941,6 +781,13 @@ INSERT INTO O_TPARM
 	'',
 	"00000000-0000-0000-0000-000000000000",
 	'');
+INSERT INTO S_DT_PROXY
+	VALUES ("9a52ac80-0dbf-4444-99ce-efd27902d8db",
+	"00000000-0000-0000-0000-000000000000",
+	'ElementTypeConstants',
+	'',
+	'',
+	'../../Datatypes/Datatypes.xtuml');
 INSERT INTO O_TPARM
 	VALUES ("b5d7bb99-8fc7-4997-872e-875fa6364218",
 	"39234bd4-7c4b-4acb-ba0a-3941999ac9d1",
