@@ -103,7 +103,7 @@ The "closest match" [5.3.2] is the simpliest option. However, with this option t
 
 
 
-### 6. Design
+### 6. Work Required  
 During the BridgePoint v6.6 release cycle the OAL grammar (oal.bnf) was modified for [2.7](#2.7). This issue modified the grammar to make the enumerations and constants use the same rule, scoped_access. 
 
 ```
@@ -181,22 +181,12 @@ will not be resolved as part of this work as it is outside the scope of the
 requirements to fix existing bugs.
 
 
-### 7. Design Comments
-
-None  
-
-### 8. User Documentation
-
-The existing documenation shall be modified to update places that describe this behavior as an error and to describe the 
-new behavior.  
-
-### 9. Unit Test
+### 9. Acceptance Test
 
 9.1 Assure that duplicate-named enumeration data types may exist in separate packages in a model.  
 9.2 Assure that duplicate-named constant data types may exist in separate packages in a model.  
-9.3 Assure that duplicate-named structured data types may exist in separate packages in a model.  
-9.4 Assure that duplicate-named user data types may exist in separate packages in a model.  Note 
-that this is already allowed in the tool today. However, it is simply added here for completeness.  
-9.5 Test backwards compatibility to assure that existing models do not have parse errors unless duplicates are present.  
+9.3 Test backwards compatibility to assure that existing models do not have parse errors unless duplicates are present.  
+9.4 When duplicates types are present, the user is allowed to select any one of the duplicates from the OAL.  
+9.5 Command completion works properly for the fully-qualified path specified to the datatype.  
 
 ### End
