@@ -5,7 +5,7 @@ This work is licensed under the Creative Commons CC0 License
 ---
 
 # Not possible to specify datatypes with the same name at different levels.
-### xtUML Project Design Note
+### xtUML Project Analysis Note
 
 
 ### 1. Abstract
