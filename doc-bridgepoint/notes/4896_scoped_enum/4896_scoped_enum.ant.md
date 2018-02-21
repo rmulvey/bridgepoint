@@ -104,7 +104,7 @@ The "closest match" [5.3.2] is the simpliest option. However, with this option t
 
 
 ### 6. Work Required  
-During the BridgePoint v6.6 release cycle the OAL grammar (oal.bnf) was modified for [2.7](#2.7). This issue modified the grammar to make the enumerations and constants use the same rule, scoped_access. 
+During the BridgePoint v6.6 release cycle the OAL grammar (oal.bnf) was modified for [[2.7](#2.7)]. This issue modified the grammar to make the enumerations and constants use the same rule, scoped_access. 
 
 ```
 scoped_access
@@ -121,13 +121,12 @@ An example usage would look like:
 ```
 temp = GPS Watch::TrackingDataTypes::GoalCriteria::HeartRate;
 ```
-Following is an idea for what the grammer change may be to support this. This is not intended to be 
-the final grammar change, it is simply to help faciliate discussion.  It is worth note=ing that the current data-type chooser
-provides a full-path to a data type. The grammar change shall use a similar path to the data type.  
+It is worth noting that the current data-type chooser provides a full-path to a data type. The grammar change shall use a similar path to the data type.  
 
 ![Data type chooser IPRs enabled](data_type_chooser_iprs_enabled.png) 
 
-Here is an example updated scoped_access rule for the grammar:
+Following is an idea for what the grammer change in [oal.bnf](https://github.com/xtuml/bridgepoint/blob/46c8b9692b933a1538e5be65cf353a3a78e1c213/src/org.xtuml.bp.als.oal/bnf/oal.bnf) may be to support this. This is not intended to be 
+the final grammar change, it is simply to help faciliate discussion.   Here is an example updated scoped_access rule for the grammar:
 
 ```
 scoped_access
