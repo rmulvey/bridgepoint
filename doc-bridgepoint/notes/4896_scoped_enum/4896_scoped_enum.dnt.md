@@ -56,17 +56,17 @@ The OAL parser reports a duplicate in situations where the user would prefer tha
 
 The requirements are sourced from [[2.2]](#2.2).  
 
-4.1 A BridgePoint model shall allow duplicate-named enumeration data types to exist in separate packages in a model.  
-4.2 A BridgePoint model shall allow duplicate-named constant data types to exist in separate packages in a model.  
-4.3 With respect to 4896-1 and 4896-2, the parser shall search from the OAL action body where the type is used “out” in the model, and the first element name that resolves the data-type shall be used.  
-4.4 While parsing OAL to resolve the a data type (4893-3), if a duplicate name is encountered in separate packages that are at the “same level” in the model, a parse error shall be given. The error given shall be in the same form the tool gives today for duplicate types.  
-4.5 The mechanism introduced to allow duplicate types to exist shall allow for backwards compatibility of existing OAL.  
+4.1 A BridgePoint project shall allow duplicate-named enumeration data types to exist in separate packages where both are visible to the OAL being written.  
+4.2 A BridgePoint project shall allow duplicate-named constant data types to exist in separate packages where both are visible to the OAL being written.  
+4.3 Where duplicate data types are present the user must specify, in OAL, the fully qualified path to the desired type to resolve the duplicate.  
+4.4 The fully qualified path to the desired type shall be allowed, but not required, if duplicates are not present.  
+4.5 The OAL grammar introduced to provide support for duplicates shall support command completion.  
 
 ### 5. Analysis
 
 
 5.1 History  
-This issue has been open a very long time. There is some related history that needs to be considered. This section describes this history.  
+This issue has been open a very long time. There is some related history that needs to be considered as it may be helpful to the analysis. This section describes this history.  
 5.1.1 [Parser enumerator binding policy incorrect](#2.3)  
 Issue [[2.3] Comment 1](https://support.onefact.net/issues/1143#note-1) describes that this change requires a significant change to the parser validation implementation "for enumerators": "At the level it is currently being performed, there is too little scope to validate correctly. It needs to be performed at a much higher level, where the complete assignment statement syntax tree is accessible. One suggestion might be in data_types_compatible()".  
 
@@ -90,7 +90,7 @@ The parser name resolition used by BridgePoint is partially modeled. It is model
 An operation, PE_PE::collectVisibleElementsForName, serves as the entry-point for this search. This search honors current BridgePoint scoping and visibility rules.  
 
 5.3 Options  
-5.3.1 Introduce an "path-spec" to the OAL grammar  
+5.3.1 Introduce a "path-spec" to the OAL grammar  
 A full-qualifed path to the referenced data-type could be included by the user in OAL to specify which data-type they wish to refer to. It is observed that the "data-type chooser" does this when allowing the user to select a "user data type" to assign to an element.  OAL grammer could be modifed to intriduce such a path that could be specified in the grammar.  
 
 Such a path should consider that duplicates may exist outside the current model when inter-project references are enabled, and must account for this.
@@ -98,11 +98,87 @@ Such a path should consider that duplicates may exist outside the current model 
 5.3.2 Use the "closest" match  
 Modify PE_PE::collectVisibleElementsForName and introduce a "search depth". Since PE_PE::collectVisibleElementsForName is essentially a recursive-decent search, this "search depth" would allow the parser to know which duplicate name (if there was a duplicate) is the "closest" in scope to the OAL Action body. In the case of a duplicate name, the "closest to the action body" when searching "out" would be used. If the search resulted in multiple matches with an equal "search depth" then it would still be considered a duplicate.  
 
-5.4 Design Choice  
-The "closest match" [5.3.2] is the simpliest option. However, with this option the user is NOT allowed to select a type when there are duplicates, instead the user is forced to use the "closest". Of course in the situation where there are duplicates at the "same level" in this approach, the duplicate error would remain. The fact that the user is not allowed to specify which visibile data type to use when there are duplicates does not satisfy requirement [3], and therefore this option shall not be used. Option [5.3.1], introducing a path-spec to the OAL grammar shall be used.  
+5.4 Choice  
+The "closest match" [5.3.2] is the simpliest option. However, with this option the user is NOT allowed to select the desired datatype when there are duplicates, instead the user is forced to use the "closest". Additionally, in this ""closest match" approach, a situation where there are duplicates at the "same level" would still cause an error, the duplicate error would remain. Additionally, the fact that the user is not allowed to specify which visibile data type to use when there are duplicates does not satisfy requirement [4.3], and therefore this option shall not be used. Option [5.3.1], "introducing a path-spec to the OAL grammar shall be used".  
+
 
 
 ### 6. Design
+During the BridgePoint v6.6 release cycle the OAL grammar (oal.bnf) was modified for [2.7](#2.7). This issue modified the grammar to make the enumerations and constants use the same rule, scoped_access. 
+
+```
+scoped_access
+   :
+    scoped_data_type
+    TOK_DOUBLECOLON!
+    scoped_member
+  ;
+```
+
+This issue shall enhance this scoped_access rule to allow the elements that use this rule (currently enumerations and constants) to optionally contain a full path to the scoped element. 
+
+An example usage would look like:  
+```
+temp = GPS Watch::TrackingDataTypes::GoalCriteria::HeartRate;
+```
+Following is an idea for what the grammer change may be to support this. This is not intended to be 
+the final grammar change, it is simply to help faciliate discussion.  It is worth note=ing that the current data-type chooser
+provides a full-path to a data type. The grammar change shall use a similar path to the data type.  
+
+![Data type chooser IPRs enabled](data_type_chooser_iprs_enabled.png) 
+
+Here is an example updated scoped_access rule for the grammar:
+
+```
+scoped_access
+   :
+    (
+    scoped_model
+    TOK_DOUBLECOLON!
+    scoped_package
+    )?
+    scoped_data_type
+    TOK_DOUBLECOLON!
+    scoped_member
+  ;
+  
+scoped_model!
+  :
+    general_name
+  ;
+  
+scoped_package!
+  :
+    general_name
+    (
+    TOK_DOUBLECOLON!
+    scoped_package
+    )*
+  ;
+  
+```
+
+6.1 Grammar change  
+
+Update the scoped_access rule to allow scoping to include the the model name and the package name. 
+
+6.2 OAL validation function changes
+
+The OAL Validation functions that are used to implement the scoped_access rule will need to be updated
+to account for the changes to the grammar.  
+
+6.3 Array dimensions
+
+Symbolic constants of type integer are allowed in array dimensions. The array
+dimensions are parsed using regular expressions. If an identifier is parsed, a
+search is made for the symbolic constant and its value is assessed. This must be
+extended to support scoped constants.
+
+There is a bug in this area that constants defined in separate model roots
+(root packages under system) are not visible for the purposes of array
+dimensions. An issue has been raised to track this (see [[2.5]](#2.5)), but it
+will not be resolved as part of this work as it is outside the scope of the
+requirements to fix existing bugs.
 
 
 ### 7. Design Comments
