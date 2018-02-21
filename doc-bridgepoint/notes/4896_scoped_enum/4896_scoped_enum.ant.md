@@ -179,6 +179,8 @@ dimensions. An issue has been raised to track this (see [[2.5]](#2.5)), but it
 will not be resolved as part of this work as it is outside the scope of the
 requirements to fix existing bugs.
 
+6.4 Define and create unit tests for this work.  
+
 
 ### 9. Acceptance Test
 
