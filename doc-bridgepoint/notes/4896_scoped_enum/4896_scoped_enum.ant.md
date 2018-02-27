@@ -59,7 +59,7 @@ The requirements are sourced from [[2.2]](#2.2).
 
 4.1 A BridgePoint project shall allow duplicate-named enumeration types to exist in separate packages where both are visible to the OAL being written.  
 4.2 A BridgePoint project shall allow duplicate-named constant types to exist in separate packages where both are visible to the OAL being written.  
-4.3 Where duplicate scoped types are present, the user must specify, in OAL, the fully qualified path to the desired type to resolve the duplicate.  
+4.3 Where duplicate scoped types are present, the user shall be allowed to specify, in OAL, the fully qualified path to the desired type to resolve the duplicate.  
 4.4 If duplicates are NOT present, the fully qualified path to the desired type shall be allowed, but not required.  
 4.5 The OAL grammar introduced to provide support for duplicates shall support command completion.  
 4.6 Qualifiers shall follow OAL identifier rules (no blanks).
