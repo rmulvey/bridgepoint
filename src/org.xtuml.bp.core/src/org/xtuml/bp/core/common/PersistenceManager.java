@@ -77,6 +77,7 @@ public class PersistenceManager {
     private static TreeMap<String,PersistableModelComponent> InconsistentInstances = new TreeMap<String,PersistableModelComponent>();
     private static Set<PersistableModelComponent> instanceSet = new HashSet<PersistableModelComponent>();
 	public static List<IProject> projectsAllowedToLoad = new ArrayList<IProject>();
+	public static final String UNIQUE_NAME_SEPARATOR = "_";
 	public boolean doNotCreateUniqueName;
 
     private PersistenceManager() {
@@ -150,7 +151,7 @@ public class PersistenceManager {
             		if (candidate.getClass() == element.getClass() && candidate != getChildForNameValidation(element))
             		{
             		    postfix += 1;   
-                        uniqueName = candidateName + "-" + postfix; //$NON-NLS-1$
+                        uniqueName = candidateName + UNIQUE_NAME_SEPARATOR + postfix; //$NON-NLS-1$
                         iterator = children.iterator();
             		}
             	}
@@ -236,7 +237,7 @@ public class PersistenceManager {
           		if (candidate.getClass() == element.getClass() && candidate != getChildForNameValidation(element))
           		{
           	          postfix += 1;   
-                      uniqueName = candidateName + "-" + postfix; //$NON-NLS-1$
+                      uniqueName = candidateName + UNIQUE_NAME_SEPARATOR + postfix; //$NON-NLS-1$
                       iterator = children.iterator();
           		}
           	}
@@ -254,7 +255,7 @@ public class PersistenceManager {
             NonRootModelElement nrme = getChildOfNonRootModelElement(parent_mc.getRootModelElement(), uniqueName, child);
             while (nrme != null) {
                 postfix += 1;   
-                uniqueName = candidateName + "-" + postfix; //$NON-NLS-1$
+                uniqueName = candidateName + UNIQUE_NAME_SEPARATOR + postfix; //$NON-NLS-1$
                 nrme = getChildOfNonRootModelElement(parent_mc.getRootModelElement(), uniqueName, child);
             }
             return uniqueName;
