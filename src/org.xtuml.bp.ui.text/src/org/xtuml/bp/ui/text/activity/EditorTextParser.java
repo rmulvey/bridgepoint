@@ -46,6 +46,7 @@ import org.xtuml.bp.core.RequiredSignal_c;
 import org.xtuml.bp.core.StateMachineState_c;
 import org.xtuml.bp.core.TransitionActionHome_c;
 import org.xtuml.bp.core.Transition_c;
+import org.xtuml.bp.core.common.BridgePointDialectExeception;
 import org.xtuml.bp.core.common.IdAssigner;
 import org.xtuml.bp.core.common.NonRootModelElement;
 import org.xtuml.bp.core.common.PersistableModelComponent;
@@ -64,7 +65,7 @@ public class EditorTextParser extends TextParser
     TokenStream lexer,
     IAnnotationModel model,
     ActivityEditorInput ae_input,
-    IDocument document)
+    IDocument document) throws BridgePointDialectExeception
   {
     super(modelRoot, lexer);
     this.model = model;

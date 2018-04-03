@@ -12,6 +12,7 @@ import org.xtuml.bp.core.Block_c;
 import org.xtuml.bp.core.CorePlugin;
 import org.xtuml.bp.core.Ooaofooa;
 import org.xtuml.bp.core.common.NonRootModelElement;
+import org.xtuml.bp.core.common.BridgePointDialectExeception;
 
 public class ParseRunnable implements Runnable {
 	protected String m_document;
@@ -42,7 +43,14 @@ public class ParseRunnable implements Runnable {
 
 		Ooaofooa modelRoot = (Ooaofooa) m_modelElement.getModelRoot();
 		OalLexer lexer = new OalLexer(new StringReader(m_document));
-		TextParser parser = new TextParser(modelRoot, lexer, m_contentAssistLine, m_contentAssistCol);
+		TextParser parser = null;
+		try {
+			parser = new TextParser(modelRoot, lexer, m_contentAssistLine, m_contentAssistCol);
+		} catch (BridgePointDialectExeception de) {
+			CorePlugin.logError(de.getMessage(), null);
+			return;
+		}
+		
 		boolean parseCompleted = false;
 		boolean problemsFound = false;
 		try {

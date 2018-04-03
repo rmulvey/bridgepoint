@@ -30,6 +30,7 @@ import org.xtuml.bp.core.common.NonRootModelElement;
 import org.xtuml.bp.core.util.DocumentUtil;
 
 import org.xtuml.bp.core.Pref_c;
+import org.xtuml.bp.core.common.BridgePointDialectExeception;
 import org.xtuml.bp.core.common.BridgePointPreferencesStore;
 
 public class PartialParseRunnable extends ParseRunnable {
@@ -106,8 +107,14 @@ public class PartialParseRunnable extends ParseRunnable {
 
         Ooaofooa modelRoot = (Ooaofooa) m_modelElement.getModelRoot();
         OalLexer lexer = new OalLexer(new StringReader(parseText));
-        TextParser parser = new TextParser(modelRoot, lexer, m_contentAssistLine, m_contentAssistCol);
-        try {
+		TextParser parser = null;
+		try {
+			parser = new TextParser(modelRoot, lexer, m_contentAssistLine, m_contentAssistCol);
+		} catch (BridgePointDialectExeception de) {
+			CorePlugin.logError(de.getMessage(), null);
+			return;
+		}
+       try {
             if ( null == mostRecentSmt ) {
                 // Parse the input expression
                 parser.action(m_modelElement, false);

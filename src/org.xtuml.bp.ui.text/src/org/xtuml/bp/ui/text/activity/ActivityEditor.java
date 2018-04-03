@@ -33,6 +33,7 @@ import org.xtuml.bp.core.CorePlugin;
 import org.xtuml.bp.core.Ooaofooa;
 import org.xtuml.bp.core.Parsestatus_c;
 import org.xtuml.bp.core.Pref_c;
+import org.xtuml.bp.core.common.BridgePointDialectExeception;
 import org.xtuml.bp.core.common.BridgePointPreferencesStore;
 import org.xtuml.bp.core.common.NonRootModelElement;
 import org.xtuml.bp.core.common.NullEditorInput;
@@ -132,8 +133,14 @@ public class ActivityEditor extends OALEditor
 		Ooaofooa modelRoot = (Ooaofooa)m_modelElement.getModelRoot();
 		OalLexer lexer = new OalLexer(
 				new StringReader(m_document.get()));
-		EditorTextParser parser = new EditorTextParser(modelRoot, lexer,
-				m_myAnnotationModel, m_ae_input, m_document);
+		EditorTextParser parser;
+		try {
+			parser = new EditorTextParser(modelRoot, lexer,
+					m_myAnnotationModel, m_ae_input, m_document);
+		} catch (BridgePointDialectExeception de) {
+			CorePlugin.logError(de.getMessage(), null);
+			return;
+		}
         boolean parseCompleted = false;
         boolean problemsFound = false;
 		m_myAnnotationModel.beginReporting();

@@ -25,6 +25,7 @@ import org.xtuml.bp.als.oal.Oal_validate;
 import org.xtuml.bp.als.oal.pt_SemanticException;
 import org.xtuml.bp.core.ActionHome_c;
 import org.xtuml.bp.core.Action_c;
+import org.xtuml.bp.core.Actiondialect_c;
 import org.xtuml.bp.core.Attribute_c;
 import org.xtuml.bp.core.BaseAttribute_c;
 import org.xtuml.bp.core.Bridge_c;
@@ -38,6 +39,7 @@ import org.xtuml.bp.core.Oalconstants_c;
 import org.xtuml.bp.core.Ooaofooa;
 import org.xtuml.bp.core.Operation_c;
 import org.xtuml.bp.core.Package_c;
+import org.xtuml.bp.core.Pref_c;
 import org.xtuml.bp.core.ProvidedOperation_c;
 import org.xtuml.bp.core.ProvidedSignal_c;
 import org.xtuml.bp.core.RequiredOperation_c;
@@ -45,6 +47,8 @@ import org.xtuml.bp.core.RequiredSignal_c;
 import org.xtuml.bp.core.StateMachineState_c;
 import org.xtuml.bp.core.TransitionActionHome_c;
 import org.xtuml.bp.core.Transition_c;
+import org.xtuml.bp.core.common.BridgePointDialectExeception;
+import org.xtuml.bp.core.common.BridgePointPreferencesStore;
 import org.xtuml.bp.core.common.IdAssigner;
 import org.xtuml.bp.core.common.NonRootModelElement;
 import org.xtuml.bp.core.common.PersistableModelComponent;
@@ -57,12 +61,29 @@ public class TextParser extends OalParser {
 	private int m_type = Oalconstants_c.OOA_UNINITIALIZED_ENUM;
 	private UUID m_action_id = null;
 
-	public TextParser(Ooaofooa modelRoot, TokenStream lexer) {
+	public TextParser(Ooaofooa modelRoot, TokenStream lexer) throws BridgePointDialectExeception {
 		super(modelRoot, lexer);
+		if (Pref_c
+				.Getactiondialect(BridgePointPreferencesStore.DEFAULT_ACTION_LANGUAGE_DIALECT) != Actiondialect_c.oal) {
+			throw new BridgePointDialectExeception("The OAL dialect is not selected, OAL parsing is not allowed.");
+		}
+		
 	}
 
-	public TextParser(Ooaofooa modelRoot, TokenStream lexer, int contentAssistLine, int contentAssistCol) {
+	public TextParser(Ooaofooa modelRoot, TokenStream lexer, int contentAssistLine, int contentAssistCol) throws BridgePointDialectExeception {
 		super(modelRoot, lexer, contentAssistLine, contentAssistCol);
+		if (Pref_c
+				.Getactiondialect(BridgePointPreferencesStore.DEFAULT_ACTION_LANGUAGE_DIALECT) != Actiondialect_c.oal) {
+			throw new BridgePointDialectExeception("The OAL dialect is not selected, OAL parsing is not allowed.");
+		}
+		
+	}
+
+	/**
+	 * prevent the no-arg constructor
+	 */
+	private TextParser() {
+		super(null, null);
 	}
 	
 	public NonRootModelElement getContainer( Object model ) {
@@ -168,7 +189,8 @@ public class TextParser extends OalParser {
 
 	public final UUID action(Object model, boolean clearContext)
 			throws RecognitionException, TokenStreamException,
-			InterruptedException {
+			InterruptedException, RuntimeException  {
+		
 		// The parser validation code assumes that all data types
 		// are loaded.
 		PersistableModelComponent.ensureDataTypesAvailable(getModelRoot());
