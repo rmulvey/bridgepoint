@@ -176,6 +176,11 @@ possibility name. Finally, the unit test operation als/oal/test/completion/OalAu
 was modified for location "L37" (specific to the possibilities called out above) to add "::" to the possibily so the
 possibility matches the actual result for these cases.
 
+6.2 Fix failing unit test (testSymbolicConstantIntegrityChecks)
+
+This unit test was failing. Investigation showed that the reason was that when scoped_path was introduced, 
+the number of expected failures in this test changed from 4 to 2. This was simply a case where the
+expected result for the test needed to be updated, and I did so.  
 
 
 ### 7. Unit Test
