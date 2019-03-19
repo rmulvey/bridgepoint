@@ -33,7 +33,7 @@ context of the larger modeling action.
 
 ==== 3.2.1 The mechanism shall be accessible to edit existing relationships.
 
-==== 3.2.1 The mechanism shall be designed to facilitate reuse and future enhancement.
+==== 3.2.2 The mechanism shall be designed to facilitate reuse and future enhancement.
 
 === 3.3 The mechanism shall support enforcement of certain modeling standards.
 
