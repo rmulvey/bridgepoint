@@ -244,6 +244,8 @@ INSERT INTO CME VALUES ('--',       'Move Up',             'C_PP',    '',       
 INSERT INTO CME VALUES ('--',       'Move Down',           'C_PP',    '',                      false, '' );
 INSERT INTO CME VALUES ('--',       'Move Up',             'O_TFR',   '',                      false, '' );
 INSERT INTO CME VALUES ('--',       'Move Down',           'O_TFR',   '',                      false, '' );
+INSERT INTO CME VALUES ('--',       'Make Deferred',       'O_TFR',   '',                      false, 'Select the relationship to defer the operation to.' );
+INSERT INTO CME VALUES ('--',       'Make Local'   ,       'O_TFR',   '',                      false, '' );
 INSERT INTO CME VALUES ('--',       'Move Up',             'C_AS',    '',                      false, '' );
 INSERT INTO CME VALUES ('--',       'Move Down',           'C_AS',    '',                      false, '' );
 INSERT INTO CME VALUES ('--',       'Move Up',             'C_IO',    '',                      false, '' );
@@ -353,7 +355,13 @@ INSERT INTO CME VALUES ('--', 'Import terminators from component', 'D_DEPL', 'C_
 INSERT INTO CME VALUES ('--', 'Delete stale services', 'D_TERM', '', false );
 INSERT INTO CME VALUES ('Delete', '', 'D_TSVC', '', true );
 
+INSERT INTO CME VALUES ('Binary', 'Edit association', 'R_REL', '', false, 'Configure association details', '1');
+INSERT INTO CME VALUES ('Subsup', 'Edit association', 'R_REL', '', false, 'Configure association details', '1');
+INSERT INTO CME VALUES ('Subsup', 'Edit association', 'R_SUB', '', false, 'Configure association details', '1');
+
 --
+INSERT INTO MEF VALUES ('Binary', 'Edit association', 'R_REL', 'type', 'simp_or_assoc');
+INSERT INTO MEF VALUES ('Subsup', 'Edit association', 'R_REL', 'type', 'subsup');
 INSERT INTO MEF VALUES ('--', 'Delete stale services', 'D_TERM', 'can', 'delete stale services');
 INSERT INTO MEF VALUES ('--',    'Disconnect',  'C_P',    'can', 'dissatisfy' );
 INSERT INTO MEF VALUES ('--',    'Disconnect',  'C_R',    'can', 'dissatisfy' );
@@ -423,6 +431,8 @@ INSERT INTO MEF VALUES ('--',       'Move Down',     'C_PP',    'can', 'move dow
 INSERT INTO MEF VALUES ('Set',    'Type',          'C_PP',    'can', 'SetType' );
 INSERT INTO MEF VALUES ('--',       'Move Up',       'O_TFR',    'can', 'move up' );
 INSERT INTO MEF VALUES ('--',       'Move Down',     'O_TFR',    'can', 'move down' );
+INSERT INTO MEF VALUES ('--',       'Make Deferred', 'O_TFR',    'can', 'make deferred' );
+INSERT INTO MEF VALUES ('--',       'Make Local',    'O_TFR',    'can', 'make local' );
 INSERT INTO MEF VALUES ('--',       'Move Up',       'C_AS',    'can', 'move up' );
 INSERT INTO MEF VALUES ('--',       'Move Down',     'C_AS',    'can', 'move down' );
 INSERT INTO MEF VALUES ('--',       'Move Up',       'C_IO',    'can', 'move up' );

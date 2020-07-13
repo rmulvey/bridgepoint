@@ -14,12 +14,14 @@
   * [BridgePoint Installation](#installation)
     * [What is the difference between the "xtUML Modeler" and "BridgePoint Development" versions?](#userdevversions)
     * [Machine Recommendations](#machinerecomendations)
+    * [How do I configure BridgePoint to use a specific Java runtime (JRE or JDK)?](https://github.com/xtuml/bridgepoint/blob/master/doc-bridgepoint/process/HOWTO-configure-bp-jre.adoc)
     * [Errors During Unzip](#unziperrors)
     * [Shared/Multi-user Installation](#sharedinstall)
     * [Starting BridgePoint](#launchers)
     * [Installing xsltproc](#xsltproc)
   * [BridgePoint Developer Issues](#bpdevelopers)
     * [ANTLR Build Error](#antlrbuilderror)
+    * [Maven Build Error](#mavenbuilderror)
     * [Linux Distribution-Specific Instructions](#linux)
     * [Windows Unit Test Configuration](#windowstesting)
     * [How do I run BridgePoint Unit Tests?](https://github.com/xtuml/bridgepoint/blob/master/doc-bridgepoint/process/HOWTO-run-bridgepoint-unit-tests.md)
@@ -55,6 +57,8 @@
     * [What does a yellow triangle in Model Explorer mean? (Synchronize with library/Synchronize references)](#synchronize)  
     * [Capture a stack dump when Eclipse hangs](#stack_dump)  
     * [How to set the stack size](#stack_size)  
+    * [How to build a formalized collaboration/communication diagram](#form_collab)
+    * [How do I put a Post-It Note (sticky note) comment on a diagram?](#sticky_note)
 
 
 xtUML Profile <a id="xtuml_profile"></a>
@@ -129,6 +133,11 @@ BridgePoint Installation <a id="installation"></a>
   model translation uses a single thread.  Therefore, translation performance is not improved with multiple 
   processors.  Model execution performance is single-threaded when "deterministic execution" is selected, and
   multi-threaded when it is not selected.  In general, any processor running at 1GHz and beyond will work fine.
+
+* [**How do I configure BridgePoint to use a specific Java runtime (JRE or JDK)?**](https://github.com/xtuml/bridgepoint/blob/master/doc-bridgepoint/process/HOWTO-configure-bp-jre.adoc)
+  BridgePoint is no longer bundled with Java.  You must install Java as a
+  pre-dependency before running BridgePoint.  Instructions to do so are found
+  [here](https://github.com/xtuml/bridgepoint/blob/master/doc-bridgepoint/process/HOWTO-configure-bp-jre.adoc).
   
 * **Errors During Unzip**  <a id="unziperrors"></a>  
   When unzipping the BridgePoint distribution if you see a message that indicates a duplicate file is 
@@ -191,6 +200,20 @@ BridgePoint Developer Issues <a id="bpdevelopers"></a>
   This problem is that ANTLR is not running when it should in some cases. This is a sporadic dependency 
   issue that has not yet been completely resolved.  It is raised in the issue tracking system as 
   issue [7631](https://support.onefact.net/redmine/issues/7631).
+
+* **Maven Build Error** <a id="mavenbuilderror"></a>
+  After following the [Developer's Getting Started Guide](https://github.com/xtuml/bridgepoint/blob/master/doc-bridgepoint/process/Developer%20Getting%20Started%20Guide.md) 
+  if you see errors in plugins caused by missing dependent files, and those files refer to org.eclipse.core.runtime, follow   these instructions to resolve the issue:
+  
+  - Check the version of Apache Maven using ```mvn -version```
+  - If the version is newer than 3.6.0, then proceed with this solution.
+  - Install Apache Maven 3.6.0 as detailed on the [Maven](https://maven.apache.org/install.html) website.
+  - If you are using Ubuntu or other Linux that supports alternatives, you can try the following:
+      - Download the .tar.gz and extract into /usr/share/maven
+      - Run the following command:  
+        ```$ sudo update-alternatives --install /usr/bin/mvn mvn /usr/share/maven/apache-maven-3.6.0/bin/mvn 360```
+      - Switch maven version using:  
+        ```$ sudo update-alternatives --config mvn```
   
 * **Linux Distribution-Specific Instructions** <a id="linux"></a>
   * Package Requirements for Various Linux Distributions  
@@ -525,3 +548,45 @@ thrown StackOverflowError exceptions, especially during load of large models.  D
 now sets its own default stack size in the `bridgepoint.ini` file in the installation.  The default is
 set to four megabytes via the virtual machine argument `-Xss4m`.  Users may wish to increase or decrease this 
 value (minimum recommendation is `-Xss512k`) depending on memory constraints and/or the size of their models.
+
+* **How to build a formalized collaboration/communication diagram** <a id="form_collab"></a>  
+Formalizing a collaboration (aka communication) diagram by connecting messages on the diagram
+to events and operations defined within the underlying executable (class and state) models is 
+simple, albeit perhaps not intuitive.
+  - Create a package to contain the collaboration diagram.
+  - Open the canvas editor on the newly created package.
+  - Use the "Interaction" drawer on the Palette to select the "Instance" tool.
+  - Create an instance for each participant on the collaboration diagram.
+  - Formalize each instance to a class within the underlying class model.
+  - Use the "Communication" drawer on the Palette to select the "Link" tool.
+  - Draw a communication link between each pair of collaborating participants on the diagram.
+  - For each message on the collaboration diagram:
+    - Use the "Interaction" drawer on the Palette to select the "(A)Synchronous Message" tool.
+    - Alongside the communication line between the sender/receiver pair, draw a short line, moving toward the receiver.
+    - Select both the receiver and the message (ctrl-select).
+    - Invoke the context-menu entry, "Formalize..."
+    - Select the appropriate event or operation defined within the underlying executable models.  
+    
+The resulting diagram will look something like this:
+  <img src="ExampleCollabDiag.png" alt="ExampleCollabDiag" style="width: 320px;"/>
+
+* **How do I put a Post-It Note (sticky note) comment on a diagram?** <a id="sticky_note"></a>  
+  There are times when it is useful to annotate a spot or element in a diagram
+(especially an analysis diagram like Use Case, Sequence, etc) with a graphical
+note or comment.
+
+  The BridgePoint xtUML editor does not currently (as of 2019) have a “Note”
+tool, but the “Activity Partition” tool from the Activity drawer in the
+Palette can be used to serve the purpose. This tool simply draws a line,
+which you can add text to by setting the Name value in the Properties
+view.  You can also add a Description which will show as hover text.
+
+  To make the note stand out, activate the context menu on the newly created
+element and select Format > Line Color > Red (or any color you wish).
+
+  The context menu also contains the “Layers” entry.  You can add all your
+diagram notes to a “Notes” layer, then you have the ability to hide or show
+the Notes layer to show the diagram with the additional annotations or not.
+
+  <img src="sticky_note.png" alt="Post-It Note / Sticky Note"/>
+
