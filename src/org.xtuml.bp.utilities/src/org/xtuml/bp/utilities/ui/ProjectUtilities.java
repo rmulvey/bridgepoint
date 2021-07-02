@@ -71,8 +71,8 @@ public class ProjectUtilities {
 
     private static String perspective = "org.xtuml.bp.core.perspective"; //$NON-NLS-1$
     
-    public static IProject createProjectNoUI(final String name ) throws CoreException {
-        IProject projectHandle = ResourcesPlugin.getWorkspace().getRoot().getProject(name);
+    public static IProject createProjectNoUI(final String projectName, final String projectLocation ) throws CoreException {
+        IProject projectHandle = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         if (projectHandle.exists()) {
             // try to open a currently existing project
             projectHandle.open(new NullProgressMonitor());
@@ -82,7 +82,12 @@ public class ProjectUtilities {
         // project doesn't exist, create a new project
         final IProjectDescription myTestProject = ResourcesPlugin
                 .getWorkspace().newProjectDescription(projectHandle.getName());
-        myTestProject.setLocation(null); // default location
+        if (!projectLocation.isEmpty()) {
+            IPath workingPath = new Path(projectLocation);
+            myTestProject.setLocation(workingPath);
+        } else {
+            myTestProject.setLocation(null); // default location
+        }
         projectHandle.create(myTestProject, new NullProgressMonitor());
 
         projectHandle.open(new NullProgressMonitor());
@@ -91,7 +96,7 @@ public class ProjectUtilities {
 
         ClassQueryInterface_c query = new ClassQueryInterface_c() {
             public boolean evaluate(Object candidate) {
-                return ((SystemModel_c) candidate).getName().equals(name);
+                return ((SystemModel_c) candidate).getName().equals(projectName);
             }
         };
         SystemModel_c newModel = SystemModel_c.SystemModelInstance(Ooaofooa
@@ -105,7 +110,7 @@ public class ProjectUtilities {
 					new BaseModelDelta(Modeleventnotification_c.DELTA_NEW,
 							newModel));
         }
-        newModel.setName(name);
+        newModel.setName(projectName);
 
         PersistableModelComponent newComp = PersistenceManager
                 .createRootComponent(projectHandle, newModel);
@@ -348,8 +353,12 @@ public class ProjectUtilities {
     }
 
 
+    public static boolean importModelWithoutWizard(SystemModel_c systemModel, String filePath) {
+    	return importModelWithoutWizard(systemModel, filePath, false);
+    }
+    
     public static boolean importModelWithoutWizard(SystemModel_c systemModel,
-            String filePath) {
+            String filePath, boolean reconcileGraphics) {
 		IPath templatePath = new Path(filePath);
 		if (templatePath.getFileExtension().equals(Ooaofooa.MODELS_EXT)) {
 			File inputFile;
@@ -361,7 +370,7 @@ public class ProjectUtilities {
 				String message = "";
 				IModelImport importer = importHelper.doImportPhase1(processor, systemModel, inputFile, monitor);
 				importHelper.doImportPhase2(processor, systemModel, monitor, message, importer);
-				importHelper.doResolveMASL(importer, systemModel, false);
+				importHelper.doResolveMASL(importer, systemModel, reconcileGraphics);
 			} catch (FileNotFoundException e) {
 				CorePlugin.logError("Internal error: failed to open " + filePath, e);
 				return false;

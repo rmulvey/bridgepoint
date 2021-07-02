@@ -28,8 +28,11 @@
     * [Common BridgePoint Unit Test Problems](#unittesting)
     * [How do I turn on Tracing/Debugging statements in BridgePoint](#tracing)
     * [Command Line Build Instructions](#clibuild)
+    * [xtUML git merge driver](#mergedriver)
     * [How do BridgePoint Context Menu Entries (CMEs) work?](#bp_cme)
     * [How to generate code for a specific class without waiting for a full build](#fast_build1)
+  * [Ciera](#ciera)
+    * [Debugging Ciera Projects](#ciera_debugging)
   * [Verifier](#verifier)
     * [What does "Nothing to verify." mean?](#nothingtoverify) 
   * [Model Translation / Model Compilers](#mcs)
@@ -278,6 +281,64 @@ BridgePoint Developer Issues <a id="bpdevelopers"></a>
   
   This will clone the repositories into `~/build/git` if they do not exist locally, switch to the correct branch to build (here "testing") and run the build and packaging.   After the build is done, you can inspect the build workspace that was used.  Simply launch BridgePoint and choose the workspace (e.g. `/home/kbrown/build/work/testing`)   
 
+* **xtUML git merge driver** <a id="mergedriver"></a>
+
+  xtUML model compare uses a semantic aware differencing engine.  This allows for comparison at a model level rather than a textual level.  There are many benefits to this when working with model data across large teams.  The differencing engine is available when using the eclipse team interface; it takes a little bit of effort to enable this at git's core.  The following instructions will enable the differencing engine at the command line.
+
+  * **The git merge driver**
+
+    Git supports custom merge drivers which enable any script or application to perform the differencing between changes. A custom merge driver is defined in the config file for a git repository.  Here is an example for xtUML:
+
+    ```
+    [merge "xtuml"]
+        name = xtUML Merge
+        driver = ./.git/xtuml-merge.sh %A %B %O 
+    ```
+    This configuration should be set globally and as part of a developer's setup.  You can set the the global configuration as follows:
+    ```console
+    git config --global merge.xtuml.name "xtUML Merge"
+    git config --global merge.xtuml.driver "./.git/xtuml-merge.sh %A %B %O"
+    ```
+
+    Note that we are pointing at a script in order to capture the required absolute paths for the files involved.  This is required by the Bridgepoint CLI merge.  In this example the script is actually located in the .git folder, and the git merge is initiated at the repository root.  In production environments this script would live in a well defined location.
+
+    ```bash
+    #!/bin/bash
+    #
+    # xtuml-merge.sh
+    #
+    # Use this wrapper to provide absolute paths for
+    # temporary merge files
+    #
+
+    BPINSTALL="/Users/developer/xtuml" # installation dir for BridgePoint
+    BASEDIR=$(pwd)
+    LEFT=$BASEDIR/$1
+    RIGHT=$BASEDIR/$2
+    ANCESTOR=$BASEDIR/$3
+
+    $BPINSTALL/BridgePoint.app/Contents/Eclipse/tools/mc/bin/CLI.sh Merge -leftFile $LEFT -rightFile $RIGHT -ancestorFile $ANCESTOR -outputFile $LEFT
+    ```
+  * **Git attributes**
+
+    To have a git repository make use of the custom merge driver for all xtuml files you must enable it with a local .gitattributes file.  The contents for that file are simply:
+    ```console
+    *.xtuml merge=xtuml
+    ```
+
+  * **Model compare preferences**
+    The differencing engine can be configured to ignore graphical conflicts if desired.  If this preference is chosen the local graphical data will always be kept.
+
+    The preference is configured in this file:
+    ```console
+    $BPINSTALL/BridgePoint.app/Contents/Eclipse/plugins/org.xtuml.bp.pkg_<version>/plugin_customization.ini
+    ```
+    The preference to modify is labeled org.xtuml.bp.model.compare/bridgepoint_prefs_ignore_graphical_conflicts and is false by default.
+
+  * **When a conflict occurs**
+  
+    When a conflict is encountered you must use the merge tool in Bridgepoint.  Open Bridgepoint with a workspace containing the conflicts.  Then right click the project and choose Team > Merge Tool.
+
 * **How do BridgePoint Context Menu Entries (CMEs) work?** <a id="bp_cme"></a>
   - There is a package in org.xtuml.bp.core project named context_menu. Under this package is the class diagram that defines  BridgePoint CME behavior. 
     - The pre-existing instance data that populates this model is found in [bp.core/sql/context_menu.pei.sql](https://github.com/xtuml/bridgepoint/blob/master/src/org.xtuml.bp.core/sql/context_menu.pei.sql).
@@ -444,12 +505,98 @@ Verifier <a id="verifier"></a>
 * **What does "Nothing to verify." mean?**  <a id="nothingtoverify"></a>  
   It means that the execution engine did not find parsed instances to execute. Here are things to check:
   * Make sure the selected element is being parsed successfully. If there is an OAL error there will be nothing to launch.  Check the Problems view for errors.
-  * Make sure there is some OAL in the model elements that are under the selected launch configuration.  Inspect your model to verify there are elements under the project/component you are launching that contain action language. 
+  * Make sure there is some OAL in the model elements that are under the selected debug configuration.  Inspect your model to verify there are elements under the project/component you are launching that contain action language. 
   * Are the packages containing the classes inside a component? They need to be.
-  * Some other error in the selected launch configuration is likely present.  Check the Problems view and Error Log view for indications of issues in the model you are launching.  
+  * When creating a debug configuration for component definitions, check the box next to each component, not the one next to the package containing them (ref. https://support.onefact.net/issues/12085).
+  * Some other error in the selected debug configuration is likely present.  Check the Problems view and Error Log view for indications of issues in the model you are launching.  
   
   If you are still having trouble, check out [this thread on the xtuml.org forums](https://xtuml.org/community/topic/what-does-nothing-to-verify-mean/) and ask for help there.
 
+Ciera <a id="ciera"></a>
+------------
+
+**Debugging Ciera Projects** <a id="ciera_debugging"></a>  
+
+* **Configuring Source Inclusion**
+  
+  If you are working with a project where the source is not in the standard target/generated-source location, you may need to create a jar with the build.  This can be done by modifying the projects pom.xml file to add the maven source plugin.  Under the ```<plugins>``` section add the following plugin definition.
+
+```
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-source-plugin</artifactId>
+  <version>3.2.0</version>
+  <executions>
+    <execution>
+      <id>attach-sources</id>
+      <goals>
+        <goal>jar</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+```
+
+  On build this will create a jar file appended with the -sources tag, Project/target/Project-{version}-sources.jar.
+ 
+  * Add plugin definition
+* Build your project as described by the <a href="https://xtuml.github.io/cieradoc/userguide/en_US/CieraUserGuide.pdf">Ciera documentation</a>
+* **Preparing source in Bridgepoint**
+  * Open Bridgepoint
+  * Import your project into the workspace
+* **If using generated sources jar**
+  * Create a new project, New > Project...
+  * Select General > Project
+  * Name the project
+  * Right click the project in Project Explorer/Navigator
+  * Select Import...
+  * Choose General > Archive
+  * Click Next
+  * Browse for the Project/target/Project-{version}-sources.jar file and click Open
+  * Click Finish
+  * Choose No to overwrite .project
+ 
+* **Setting up remote debug configuration**
+  * Open the Debug Perspective
+  * Open Debug Configurations at Debug > Debug Configurations...
+  * Select Remote Java Application in the left tree
+  * Press the New Button at the top left of the tree, or right click and select New
+  * Enter a name for the debug configuration
+  * Select the Source tab
+  * Select any default source lookup path entries and click Remove
+  
+* **If using an out of the box Ciera configuration**
+  * Click the Add... button
+  * Choose Workspace Folder
+  * Navigate to this folder and select:
+   ```
+   {project}/target/generated-sources/java
+   ```
+* **If using generated sources jar**
+  * Click the Add... button
+  * Choose Project
+  * Check the source project previously created
+  * Close the Debug Configurations dialog
+  * Click OK
+  * Click Apply
+  * In Bridgepoint, set a breakpoint for the application in the main method:
+  
+  **If using an out of box Ciera configuration**
+  ```
+  {project}/target/generated-sources/java/{project}/{project}Application.java
+  ```
+  **If using generated sourcese jar**
+  ```
+  {jar-source-project}/{project}/{project}Application.java
+  ```
+  * Run the application in a terminal:
+  ```
+  java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=y {project}.{Project}Application
+  ```
+  * This will have the application wait for your remote debugger to attach
+  * In Bridgepoint choose Debug > Debug Configurations... > Remote Java Application > {DebugConfigName}
+  * Click Debug
+  * The breakpoint is hit
 
 Model Translation / Model Compilers <a id="mcs"></a>
 ------------
